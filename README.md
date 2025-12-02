@@ -4,6 +4,14 @@ Floral is a zero-dependency web-component based design-system using the latest w
 
 The project is a learning experience about the latest web standards and everything involved in building a design system. From picking colors to designing, building and documenting components.
 
+## How to run:
+
+Start the development server:
+
+   ```bash
+   npm start
+   ```
+
 ## Initial project Goals:
 
 * No third party dependencies except potential polyfills and a test-framework.

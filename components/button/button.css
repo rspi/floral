@@ -1,0 +1,11 @@
+button {
+  display: flex;
+  background: red;
+  cursor: pointer
+}
+
+:host([disabled]) button {
+  cursor: default;
+
+  background: gray;
+}
