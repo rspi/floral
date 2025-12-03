@@ -1,11 +1,11 @@
 export class CustomElement extends HTMLElement {
   static get observedAttributes() {
-    if (!this.meta || !this.meta.props) {
+    if (!this.meta || !this.meta.attributes) {
       throw new Error(
-        "A component extending CustomElement is missing the static 'meta.props' property, which is required.",
+        "A component extending CustomElement is missing the static 'meta.attributes' property, which is required.",
       );
     }
-    return Object.keys(this.meta.props);
+    return Object.keys(this.meta.attributes);
   }
 
   constructor(templateString, sheet) {
@@ -25,10 +25,10 @@ export class CustomElement extends HTMLElement {
   }
 
   validateAttributes(value, name) {
-    const { props } = this.constructor.meta;
-    if (value !== null && !props[name].includes(value)) {
+    const { attributes } = this.constructor.meta;
+    if (value !== null && !attributes[name].includes(value)) {
       throw new Error(`${this.tagName.toLowerCase()} got an unexpected value for argument ${JSON.stringify(name)}:
-          Expected one of: ${JSON.stringify(props[name])}
+          Expected one of: ${JSON.stringify(attributes[name])}
           Got: ${JSON.stringify(value)}
           `);
     }
