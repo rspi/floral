@@ -1,0 +1,48 @@
+:root {
+
+  --ds-color-background: #272a3c;
+  --ds-color-text: #ebeef5;
+
+  /* Accent purple */
+  --ds-color-lavender-50: #9e7fe0;
+  --ds-color-lavender-60: #b18ff0;
+  --ds-color-lavender-70: #c6a0f6;
+  --ds-color-lavender-80: #d7b8fa;
+  --ds-color-lavender-90: #e9d8fd;
+
+  /* Green */
+  --ds-color-mint-50: #7fbf73;
+  --ds-color-mint-60: #8fcc81;
+  --ds-color-mint-70: #a6da95;
+  --ds-color-mint-80: #c0e6b3;
+  --ds-color-mint-90: #daf3d0;
+
+  /* Red */
+  --ds-color-rose-50: #cb7f90;
+  --ds-color-rose-60: #d98fa0;
+  --ds-color-rose-70: #e89fb0;
+  --ds-color-rose-80: #f1b8c7;
+  --ds-color-rose-90: #f9d6df;
+
+  /* Yellow */
+  --ds-color-cowslip-50: #d9bd87;
+  --ds-color-cowslip-60: #e8c996;
+  --ds-color-cowslip-70: #f3d9a6;
+  --ds-color-cowslip-80: #f7e6c0;
+  --ds-color-cowslip-90: #fbf1d9;
+
+  /* Blue */
+  --ds-color-forgetmenot-50: #7394d8;
+  --ds-color-forgetmenot-60: #82a5e6;
+  --ds-color-forgetmenot-70: #93b7f8;
+  --ds-color-forgetmenot-80: #b2cdfc;
+  --ds-color-forgetmenot-90: #d2e4ff;
+
+  /* Surface */
+  --ds-color-surface-1: #222736;
+  --ds-color-surface-2: #2C3144;
+  --ds-color-surface-3: #343A50;
+  --ds-color-surface-4: #3E4560;
+  --ds-color-surface-5: #4A5270;
+
+}

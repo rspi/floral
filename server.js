@@ -58,7 +58,19 @@ const server = http.createServer((req, res) => {
     }
 
     if (filePath === "index.html") {
-      const injectedContent = content.toString().replace(
+      let contentString = content.toString();
+      const userAgent = req.headers["user-agent"];
+
+      if (userAgent && userAgent.includes("Firefox")) {
+        contentString = contentString.replace(
+          "</head>",
+          `<script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+           <script type="esms-options">{ "polyfillEnable": ["css-modules"] }</script>
+           </head>`,
+        );
+      }
+
+      const injectedContent = contentString.replace(
         "</body>",
         `<script>
           const eventSource = new EventSource('/events');
@@ -67,8 +79,8 @@ const server = http.createServer((req, res) => {
               window.location.reload();
             }
           };
-        </script>
-        </body>`,
+         </script>
+         </body>`,
       );
       res.writeHead(200, { "Content-Type": "text/html" });
       res.end(injectedContent);
@@ -84,4 +96,3 @@ watchFiles("./");
 server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
 });
-
