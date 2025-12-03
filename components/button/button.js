@@ -12,8 +12,13 @@ const html = `
 window.customElements.define(
   "ds-button",
   class extends CustomElement {
+    static template = html;
+    static sheet = sheet;
+
+    #button;
+
     static meta = {
-      props: {
+      attributes: {
         disabled: [""],
       },
       slots: {
@@ -21,19 +26,24 @@ window.customElements.define(
         start: "Content at the start of button text. Typically used for icons.",
         end: "Content at the end of button text. Typically used for icons.",
       },
+      parts: {},
+      cssVariables: {},
     };
 
     attributesChanged(name, oldValue, newValue) {
-      switch (name) {
-        case "disabled":
-          this.button.disabled = newValue;
+      switch ((name, newValue)) {
+        case ("disabled", ""):
+          this.#button.setAttribute(name, newValue);
+          break;
+        case ("disabled", null):
+          this.#button.removeAttribute(name);
           break;
       }
     }
 
     constructor() {
-      super(html, sheet);
-      this.button = this.shadowRoot.querySelector("button");
+      super();
+      this.#button = this.shadowRoot.querySelector("button");
     }
   },
 );

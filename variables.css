@@ -1,5 +1,17 @@
 :root {
 
+
+  --ds-space-xs: 4px;
+  --ds-space-s: 8px;
+  --ds-space-m: 12px;
+  --ds-space-l: 16px;
+  --ds-space-xl: 24px;
+  --ds-space-xxl: 48px;
+
+  --ds-transition: 0.2s ease;
+  --ds-radius: 3px;
+
+
   --ds-color-background: #272a3c;
   --ds-color-text: #ebeef5;
 

@@ -1,11 +1,50 @@
 button {
   display: flex;
-  background: red;
-  cursor: pointer
+  align-items: center;
+  gap: var(--ds-space-s);
+  cursor: pointer;
+  user-select: none;
+
+  height: 28px;
+  padding: 0 var(--ds-space-m);
+  border-radius: var(--ds-radius);
+  border: 0;
+  transition:
+    background var(--ds-transition),
+    transform var(--ds-transition),
+    box-shadow var(--ds-transition);
+
+  /* lift the button up 2px */
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 0px;
+  margin-top: 2px;
+  transform: translateY(-2px);
+
+  color: var(--ds-color-text);
+  background: var(--ds-color-surface-3);
+
+  &:hover {
+    background: var(--ds-color-surface-4);
+  }
+
+  &:active {
+    /* push the button down */
+    background: var(--ds-color-surface-5);
+    transform: translateY(0px);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-color-lavender-50)
+  }
 }
 
-:host([disabled]) button {
-  cursor: default;
-
-  background: gray;
+:host {
+  /* The consumer should own the host, but it has low specificity here so ok to set things that can be overwritten */
+  display: inline-block;
 }
