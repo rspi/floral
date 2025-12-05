@@ -28,9 +28,12 @@ window.customElements.define(
     };
 
     attributesChanged(name, oldValue, newValue) {
-      switch (name) {
-        case "disabled":
-          this.#button.disabled = newValue;
+      switch ((name, newValue)) {
+        case ("disabled", ""):
+          this.#button.setAttribute(name, newValue);
+          break;
+        case ("disabled", null):
+          this.#button.removeAttribute(name);
           break;
       }
     }

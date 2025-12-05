@@ -23,16 +23,19 @@ button {
     background: var(--ds-color-surface-5);
     transform: translateY(1px);
   }
+
+  &:disabled {
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-color-lavender-70)
+  }
 }
 
 :host {
   /* The consumer should own the host, but it has low specificity here so ok to set things that can be overwritten */
   display: inline-block;
-}
-
-
-:host([disabled]) button {
-  cursor: default;
-  pointer-events: none;
-  opacity: 0.5;
 }
