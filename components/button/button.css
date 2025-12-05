@@ -19,11 +19,11 @@ button {
   color: var(--ds-color-text);
   background: var(--ds-color-surface-3);
 
-  &:hover:not([disabled]) {
+  &:hover {
     background: var(--ds-color-surface-4);
   }
 
-  &:active:not([disabled]) {
+  &:active {
     /* push the button down */
     background: var(--ds-color-surface-5);
     transform: translateY(0px);
