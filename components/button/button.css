@@ -5,12 +5,16 @@ button {
   cursor: pointer;
   user-select: none;
 
-  height: 30px;
+  height: 28px;
   padding: 0 var(--ds-space-m);
   border-radius: var(--ds-radius);
   border: 0;
-  box-shadow: 0 -1px rgba(0, 0, 0, 0.2) inset;
   transition: background var(--ds-transition);
+
+  /* lift the button up 2px */
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 0px;
+  margin-top: 2px;
+  transform: translateY(-2px);
 
   color: var(--ds-color-text);
   background: var(--ds-color-surface-3);
@@ -20,8 +24,10 @@ button {
   }
 
   &:active:not([disabled]) {
+    /* push the button down */
     background: var(--ds-color-surface-5);
-    transform: translateY(1px);
+    transform: translateY(0px);
+    box-shadow: none;
   }
 
   &:disabled {
@@ -31,7 +37,7 @@ button {
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-color-lavender-70)
+    outline: 2px solid var(--ds-color-lavender-50)
   }
 }
 
