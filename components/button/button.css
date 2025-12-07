@@ -9,7 +9,10 @@ button {
   padding: 0 var(--ds-space-m);
   border-radius: var(--ds-radius);
   border: 0;
-  transition: background var(--ds-transition);
+  transition:
+    background var(--ds-transition),
+    transform var(--ds-transition),
+    box-shadow var(--ds-transition);
 
   /* lift the button up 2px */
   box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 0px;
