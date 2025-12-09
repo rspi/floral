@@ -2,7 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const PORT = 4711;
+const PORT = process.env.PORT || 4711;
 const clients = [];
 
 const watchFiles = (dir) => {
