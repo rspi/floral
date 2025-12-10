@@ -8,13 +8,23 @@ export class CustomElement extends HTMLElement {
     return Object.keys(this.meta.attributes);
   }
 
-  constructor(templateString, sheet) {
+  static get templateNode() {
+    if (!this.hasOwnProperty("_template")) {
+      this._template = document.createElement("template");
+      this._template.innerHTML = this.template;
+    }
+    return this._template;
+  }
+
+  constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this.shadowRoot.adoptedStyleSheets = [sheet];
-    const template = document.createElement("template");
-    template.innerHTML = templateString;
-    this.shadowRoot.appendChild(template.content.cloneNode(true));
+    if (this.constructor.sheet) {
+      this.shadowRoot.adoptedStyleSheets = [this.constructor.sheet];
+    }
+    this.shadowRoot.appendChild(
+      this.constructor.templateNode.content.cloneNode(true),
+    );
   }
 
   attributeChangedCallback(name, oldValue, newValue) {

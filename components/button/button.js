@@ -12,6 +12,9 @@ const html = `
 window.customElements.define(
   "ds-button",
   class extends CustomElement {
+    static template = html;
+    static sheet = sheet;
+
     #button;
 
     static meta = {
@@ -39,7 +42,7 @@ window.customElements.define(
     }
 
     constructor() {
-      super(html, sheet);
+      super();
       this.#button = this.shadowRoot.querySelector("button");
     }
   },
