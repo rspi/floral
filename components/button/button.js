@@ -20,6 +20,7 @@ window.customElements.define(
     static meta = {
       attributes: {
         disabled: [""],
+        variant: ["default", "primary"],
       },
       slots: {
         default: "The button content.",

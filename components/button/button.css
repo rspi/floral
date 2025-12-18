@@ -27,8 +27,9 @@ button {
   }
 
   &:active {
-    /* push the button down */
     background: var(--ds-color-surface-5);
+
+    /* push the button down */
     transform: translateY(0px);
     box-shadow: none;
   }
@@ -40,7 +41,16 @@ button {
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-color-lavender-50)
+    outline: 2px solid var(--ds-color-lavender-50);
+    outline-offset: 2px;
+  }
+}
+
+:host([variant=primary]) button {
+  background: var(--ds-color-lavender-50);
+
+  &:active {
+    background: var(--ds-color-lavender-60);
   }
 }
 
