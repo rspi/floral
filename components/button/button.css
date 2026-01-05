@@ -1,4 +1,8 @@
 button {
+  --color-background: var(--ds-color-surface-3);
+  --color-background-hover: var(--ds-color-surface-4);
+  --color-background-active: var(--ds-color-surface-5);
+
   display: flex;
   align-items: center;
   gap: var(--ds-space-s);
@@ -20,14 +24,14 @@ button {
   transform: translateY(-2px);
 
   color: var(--ds-color-text);
-  background: var(--ds-color-surface-3);
+  background: var(--color-background);
 
   &:hover {
-    background: var(--ds-color-surface-4);
+    background: var(--color-background-hover);
   }
 
   &:active {
-    background: var(--ds-color-surface-5);
+    background: var(--color-background-active);
 
     /* push the button down */
     transform: translateY(0px);
@@ -47,12 +51,18 @@ button {
 }
 
 :host([variant=primary]) button {
-  background: var(--ds-color-lavender-50);
-
-  &:active {
-    background: var(--ds-color-lavender-60);
-  }
+  --color-background: var(--ds-color-lavender-50);
+  --color-background-hover: var(--ds-color-lavender-60);
+  --color-background-active: var(--ds-color-lavender-70);
 }
+
+:host([variant=negative]) button {
+  --color-background: var(--ds-color-rose-50);
+  --color-background-hover: var(--ds-color-rose-60);
+  --color-background-active: var(--ds-color-rose-70);
+}
+
+
 
 :host {
   /* The consumer should own the host, but it has low specificity here so ok to set things that can be overwritten */

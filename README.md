@@ -20,6 +20,7 @@ Start the development server:
 * Provide design tokens.
 * Build a simple development server.
 * Storybook-like UI for documentation.
+* Follow [ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/patterns/) with tests.
 
 ## Interesting web standards used:
 
