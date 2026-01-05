@@ -50,6 +50,14 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.url === "/blank") {
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(`
+    <script type="module" src="./components/index.js"></script>
+    <link rel="stylesheet" href="variables.css" />`);
+    return;
+  }
+
   fs.readFile(filePath, (err, content) => {
     if (err) {
       res.writeHead(404);
@@ -71,7 +79,7 @@ const server = http.createServer((req, res) => {
       }
 
       const injectedContent = contentString.replace(
-        "</body>",
+        "</head>",
         `<script>
           const eventSource = new EventSource('/events');
           eventSource.onmessage = function(event) {
@@ -80,7 +88,7 @@ const server = http.createServer((req, res) => {
             }
           };
          </script>
-         </body>`,
+         </head>`,
       );
       res.writeHead(200, { "Content-Type": "text/html" });
       res.end(injectedContent);
