@@ -53,6 +53,8 @@ const server = http.createServer((req, res) => {
   if (req.url === "/blank") {
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(`
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+    <script type="esms-options">{ "polyfillEnable": ["css-modules"] }</script>
     <script type="module" src="./components/index.js"></script>
     <link rel="stylesheet" href="variables.css" />`);
     return;
