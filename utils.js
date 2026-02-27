@@ -1,6 +1,6 @@
 export class CustomElement extends HTMLElement {
   static get observedAttributes() {
-    if (!this.meta || !this.meta.attributes) {
+    if (!this.meta?.attributes) {
       throw new Error(
         "A component extending CustomElement is missing the static 'meta.attributes' property, which is required.",
       );

@@ -61,7 +61,7 @@ const server = http.createServer((req, res) => {
       let contentString = content.toString();
       const userAgent = req.headers["user-agent"];
 
-      if (userAgent && userAgent.includes("Firefox")) {
+      if (userAgent?.includes("Firefox")) {
         contentString = contentString.replace(
           "</head>",
           `<script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
