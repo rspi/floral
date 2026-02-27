@@ -5,6 +5,64 @@ body {
   background: #272a3c;
   color: #ebeef5;
   padding: 10px;
+
+
+  /* Chroma */
+  /* 1.1   +0.05 */
+  /* 1.05  +0.05 */
+  /* 1.00  +0.05 */
+  /* 0.75  -0.25 */
+  /* 0.45  -0.30 */
+
+  /* Light  */
+  /* 0.12  -0.06 */
+  /* 0.06  -0.06 */
+  /* 0.00  0     */
+  /* 0.06  +0.06 */
+  /* 0.12  +0.06 */
+
+
+
+  --step-50: calc(l - 0.12) calc(c * 1.1 ) h;
+  --step-60: calc(l - 0.06) calc(c * 1.05) h;
+  --step-80: calc(l + 0.06) calc(c * 0.75) h;
+  --step-90: calc(l + 0.12) calc(c * 0.45) h;
+
+  --viol-70: #c6a0f6;
+  --mint-70: #a6da95;
+  --rose-70: #e89fb0;
+  --corn-70: #f3d9a6;
+  --flax-70: #93b7f8;
+
+  --viol-50: oklch(from var(--viol-70) var(--step-50));
+  --viol-60: oklch(from var(--viol-70) var(--step-60));
+  --viol-80: oklch(from var(--viol-70) var(--step-80));
+  --viol-90: oklch(from var(--viol-70) var(--step-90));
+
+  --mint-50: oklch(from var(--mint-70) var(--step-50));
+  --mint-60: oklch(from var(--mint-70) var(--step-60));
+  --mint-80: oklch(from var(--mint-70) var(--step-80));
+  --mint-90: oklch(from var(--mint-70) var(--step-90));
+
+  --rose-50: oklch(from var(--rose-70) var(--step-50));
+  --rose-60: oklch(from var(--rose-70) var(--step-60));
+  --rose-80: oklch(from var(--rose-70) var(--step-80));
+  --rose-90: oklch(from var(--rose-70) var(--step-90));
+
+  --corn-50: oklch(from var(--corn-70) var(--step-50));
+  --corn-60: oklch(from var(--corn-70) var(--step-60));
+  --corn-80: oklch(from var(--corn-70) var(--step-80));
+  --corn-90: oklch(from var(--corn-70) var(--step-90));
+
+  --flax-50: oklch(from var(--flax-70) var(--step-50));
+  --flax-60: oklch(from var(--flax-70) var(--step-60));
+  --flax-80: oklch(from var(--flax-70) var(--step-80));
+  --flax-90: oklch(from var(--flax-70) var(--step-90));
+}
+
+.split{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }
 </style>
 
@@ -12,44 +70,79 @@ body {
   <h1>Floral design system</h1>
   <h2>Colors</h2>
 
-  <!-- Purple -->
-  <div class="text" style="color: #9e7fe0">Lavender 50</div>
-  <div class="text" style="color: #b18ff0">Lavender 60</div>
-  <div class="text" style="color: #c6a0f6">Lavender 70</div>
-  <div class="text" style="color: #d7b8fa">Lavender 80</div>
-  <div class="text" style="color: #e9d8fd">Lavender 90</div>
-  </br>
+  <div class='split'> 
+    <div>
+      <!-- Purple -->
+      <div class="text" style="color: #9e7fe0">Lavender 50</div>
+      <div class="text" style="color: #b18ff0">Lavender 60</div>
+      <div class="text" style="color: #c6a0f6">Lavender 70</div>
+      <div class="text" style="color: #d7b8fa">Lavender 80</div>
+      <div class="text" style="color: #e9d8fd">Lavender 90</div>
+      </br>
 
-  <!-- Green -->
-  <div class="text" style="color: #7fbf73">Mint 50</div>
-  <div class="text" style="color: #8fcc81">Mint 60</div>
-  <div class="text" style="color: #a6da95">Mint 70</div>
-  <div class="text" style="color: #c0e6b3">Mint 80</div>
-  <div class="text" style="color: #daf3d0">Mint 90</div>
-  </br>
+      <!-- Green -->
+      <div class="text" style="color: #7fbf73">Mint 50</div>
+      <div class="text" style="color: #8fcc81">Mint 60</div>
+      <div class="text" style="color: #a6da95">Mint 70</div>
+      <div class="text" style="color: #c0e6b3">Mint 80</div>
+      <div class="text" style="color: #daf3d0">Mint 90</div>
+      </br>
 
-  <!-- Red -->
-  <div class="text" style="color: #cb7f90">Rose 50</div>
-  <div class="text" style="color: #d98fa0">Rose 60</div>
-  <div class="text" style="color: #e89fb0">Rose 70</div>
-  <div class="text" style="color: #f1b8c7">Rose 80</div>
-  <div class="text" style="color: #f9d6df">Rose 90</div>
-  </br>
+      <!-- Red -->
+      <div class="text" style="color: #cb7f90">Rose 50</div>
+      <div class="text" style="color: #d98fa0">Rose 60</div>
+      <div class="text" style="color: #e89fb0">Rose 70</div>
+      <div class="text" style="color: #f1b8c7">Rose 80</div>
+      <div class="text" style="color: #f9d6df">Rose 90</div>
+      </br>
 
-  <!-- Yellow -->
-  <div class="text" style="color: #d9bd87">Cowslip 50</div>
-  <div class="text" style="color: #e8c996">Cowslip 60</div>
-  <div class="text" style="color: #f3d9a6">Cowslip 70</div>
-  <div class="text" style="color: #f7e6c0">Cowslip 80</div>
-  <div class="text" style="color: #fbf1d9">Cowslip 90</div>
-  </br>
+      <!-- Yellow -->
+      <div class="text" style="color: #d9bd87">Cowslip 50</div>
+      <div class="text" style="color: #e8c996">Cowslip 60</div>
+      <div class="text" style="color: #f3d9a6">Cowslip 70</div>
+      <div class="text" style="color: #f7e6c0">Cowslip 80</div>
+      <div class="text" style="color: #fbf1d9">Cowslip 90</div>
+      </br>
 
-  <!-- Blue -->
-  <div class="text" style="color: #7394d8">Forgetmenot 50</div>
-  <div class="text" style="color: #82a5e6">Forgetmenot 60</div>
-  <div class="text" style="color: #93b7f8">Forgetmenot 70</div>
-  <div class="text" style="color: #b2cdfc">Forgetmenot 80</div>
-  <div class="text" style="color: #d2e4ff">Forgetmenot 90</div>
+      <!-- Blue -->
+      <div class="text" style="color: #7394d8">Forgetmenot 50</div>
+      <div class="text" style="color: #82a5e6">Forgetmenot 60</div>
+      <div class="text" style="color: #93b7f8">Forgetmenot 70</div>
+      <div class="text" style="color: #b2cdfc">Forgetmenot 80</div>
+      <div class="text" style="color: #d2e4ff">Forgetmenot 90</div>
+    </div>
+    <div>
+      <div class="text" style="color: var(--viol-50)">Viol 50</div>
+      <div class="text" style="color: var(--viol-60)">Viol 60</div>
+      <div class="text" style="color: var(--viol-70)">Viol 70</div>
+      <div class="text" style="color: var(--viol-80)">Viol 80</div>
+      <div class="text" style="color: var(--viol-90)">Viol 90</div>
+      </br>
+      <div class="text" style="color: var(--mint-50)">Mint 50</div>
+      <div class="text" style="color: var(--mint-60)">Mint 60</div>
+      <div class="text" style="color: var(--mint-70)">Mint 70</div>
+      <div class="text" style="color: var(--mint-80)">Mint 80</div>
+      <div class="text" style="color: var(--mint-90)">Mint 90</div>
+      </br>
+      <div class="text" style="color: var(--rose-50)">Rose 50</div>
+      <div class="text" style="color: var(--rose-60)">Rose 60</div>
+      <div class="text" style="color: var(--rose-70)">Rose 70</div>
+      <div class="text" style="color: var(--rose-80)">Rose 80</div>
+      <div class="text" style="color: var(--rose-90)">Rose 90</div>
+      </br>
+      <div class="text" style="color: var(--corn-50)">Corn 50</div>
+      <div class="text" style="color: var(--corn-60)">Corn 60</div>
+      <div class="text" style="color: var(--corn-70)">Corn 70</div>
+      <div class="text" style="color: var(--corn-80)">Corn 80</div>
+      <div class="text" style="color: var(--corn-90)">Corn 90</div>
+      </br>
+      <div class="text" style="color: var(--flax-50)">Flax 50</div>
+      <div class="text" style="color: var(--flax-60)">Flax 60</div>
+      <div class="text" style="color: var(--flax-70)">Flax 70</div>
+      <div class="text" style="color: var(--flax-80)">Flax 80</div>
+      <div class="text" style="color: var(--flax-90)">Flax 90</div>
+    </div>
+  </div> 
 
 
 

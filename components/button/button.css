@@ -19,7 +19,7 @@ button {
     box-shadow var(--ds-transition);
 
   /* lift the button up 2px */
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 0px;
+  box-shadow: oklch(from var(--color-background) 20% c h) 0px 2px 0px;
   margin-top: 2px;
   transform: translateY(-2px);
 
