@@ -18,7 +18,10 @@ export class CustomElement extends HTMLElement {
 
   constructor() {
     super();
-    this.attachShadow({ mode: "open" });
+    this.attachShadow({
+      mode: "open",
+      delegatesFocus: this.constructor.delegatesFocus || false,
+    });
     if (this.constructor.sheet) {
       this.shadowRoot.adoptedStyleSheets = [this.constructor.sheet];
     }

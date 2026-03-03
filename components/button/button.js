@@ -12,20 +12,16 @@ const html = `
 window.customElements.define(
   "ds-button",
   class extends CustomElement {
-    static formAssociated = true;
     static template = html;
     static sheet = sheet;
-
-    #button;
-    #handleSubmit = () => {
-      this.internals.form?.requestSubmit();
-    };
+    static formAssociated = true;
+    static delegatesFocus = true;
 
     static meta = {
       attributes: {
         disabled: [""],
         variant: ["default", "primary", "negative"],
-        type: ["submit"],
+        type: ["submit", "reset"],
       },
       slots: {
         default: "The button content.",
@@ -34,6 +30,28 @@ window.customElements.define(
       },
       parts: {},
       cssVariables: {},
+    };
+
+    #button;
+
+    #handleSubmit = () => {
+      const form = this.internals.form;
+      if (form) {
+        const submitter = document.createElement("button");
+        submitter.type = "submit";
+        submitter.style.display = "none";
+        const name = this.getAttribute("name");
+        const value = this.getAttribute("value");
+        if (name) submitter.name = name;
+        if (value) submitter.value = value;
+        form.appendChild(submitter);
+        submitter.click();
+        submitter.remove();
+      }
+    };
+
+    #handleReset = () => {
+      this.internals.form?.reset();
     };
 
     formDisabledCallback(disabled) {
@@ -48,10 +66,12 @@ window.customElements.define(
     attributesChanged(name, _, newValue) {
       switch (name) {
         case "type":
+          this.#button.removeEventListener("click", this.#handleSubmit);
+          this.#button.removeEventListener("click", this.#handleReset);
           if (newValue === "submit") {
             this.#button.addEventListener("click", this.#handleSubmit);
-          } else {
-            this.#button.removeEventListener("click", this.#handleSubmit);
+          } else if (newValue === "reset") {
+            this.#button.addEventListener("click", this.#handleReset);
           }
           break;
         case "disabled":
@@ -69,6 +89,7 @@ window.customElements.define(
     constructor() {
       super();
       this.internals = this.attachInternals();
+      this.internals.role = "button";
       this.#button = this.shadowRoot.querySelector("button");
     }
   },
