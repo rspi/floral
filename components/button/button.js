@@ -77,10 +77,10 @@ window.customElements.define(
         case "disabled":
           if (newValue === "") {
             this.#button.setAttribute(name, newValue);
-            this.setAttribute("aria-disabled", "true");
+            this.internals.ariaDisabled = "true";
           } else if (newValue === null) {
             this.#button.removeAttribute(name);
-            this.setAttribute("aria-disabled", "false");
+            this.internals.ariaDisabled = "false";
           }
           break;
       }
