@@ -62,7 +62,7 @@ button {
   --color-background-active: var(--ds-color-rose-70);
 }
 
-:host([disabled]) {
+:host(:disabled) {
   pointer-events: none;
 }
 

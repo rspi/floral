@@ -54,35 +54,27 @@ window.customElements.define(
       this.internals.form?.reset();
     };
 
-    formDisabledCallback(disabled) {
-      // handle disable state from <fieldset>
-      if (disabled) {
-        this.setAttribute("disabled", "");
-      } else {
-        this.removeAttribute("disabled");
+    #handleClick = (e) => {
+      if (this.hasAttribute("disabled") || this.matches(":disabled")) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
       }
-    }
+      const type = this.getAttribute("type") ?? "submit";
+      if (type === "submit") {
+        this.#handleSubmit();
+      } else if (type === "reset") {
+        this.#handleReset();
+      }
+    };
 
-    attributesChanged(name, _, newValue) {
-      switch (name) {
-        case "type":
-          this.#button.removeEventListener("click", this.#handleSubmit);
-          this.#button.removeEventListener("click", this.#handleReset);
-          if (newValue === "submit") {
-            this.#button.addEventListener("click", this.#handleSubmit);
-          } else if (newValue === "reset") {
-            this.#button.addEventListener("click", this.#handleReset);
-          }
-          break;
-        case "disabled":
-          if (newValue === "") {
-            this.#button.setAttribute(name, newValue);
-            this.internals.ariaDisabled = "true";
-          } else if (newValue === null) {
-            this.#button.removeAttribute(name);
-            this.internals.ariaDisabled = "false";
-          }
-          break;
+    formDisabledCallback(disabled) {
+      if (disabled) {
+        this.#button.setAttribute("disabled", "");
+        this.internals.ariaDisabled = "true";
+      } else {
+        this.#button.removeAttribute("disabled");
+        this.internals.ariaDisabled = "false";
       }
     }
 
@@ -91,6 +83,7 @@ window.customElements.define(
       this.internals = this.attachInternals();
       this.internals.role = "button";
       this.#button = this.shadowRoot.querySelector("button");
+      this.addEventListener("click", this.#handleClick);
     }
   },
 );
