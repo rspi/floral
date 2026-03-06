@@ -21,7 +21,7 @@ window.customElements.define(
       attributes: {
         disabled: [""],
         variant: ["default", "primary", "negative"],
-        type: ["submit", "reset"],
+        type: ["submit", "reset", "button"],
       },
       slots: {
         default: "The button content.",
