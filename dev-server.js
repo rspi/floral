@@ -37,6 +37,22 @@ const server = http.createServer((req, res) => {
       break;
   }
 
+  if (req.url === "/blank") {
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <link rel="icon" href="data:;base64,=" />
+          <script type="module" src="./components/index.js"></script>
+          <link rel="stylesheet" href="variables.css" />
+        </head>
+        <body></body>
+      </html>
+    `);
+    return;
+  }
+
   if (req.url === "/events") {
     res.writeHead(200, {
       "Content-Type": "text/event-stream",

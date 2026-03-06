@@ -8,23 +8,23 @@ The project is a learning experience about the latest web standards and everythi
 
 Start the development server:
 
-   ```bash
-   npm start
-   ```
+```bash
+npm start
+```
 
 ## Initial project Goals:
 
-* No third party dependencies except potential polyfills and a test-framework.
-* No build system. It should be possible to run without transpiling, minifying, bundling etc.
-* Provide metadata for generation of wrappers around the components.
-* Provide design tokens.
-* Build a simple development server.
-* Storybook-like UI for documentation.
-* Follow [ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/patterns/) with tests.
+- No third party dependencies except potential polyfills and a test-framework.
+- No build system. It should be possible to run without transpiling, minifying, bundling etc.
+- Provide metadata for generation of wrappers around the components.
+- Provide design tokens.
+- Build a simple development server.
+- Storybook-like UI for documentation.
+- Follow [ARIA Authoring Practices Guide](https://www.w3.org/WAI/ARIA/apg/patterns/) with tests.
 
 ## Interesting web standards used:
 
-* [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components)
-* [ElementInternals](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals)
-* [Import with](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import/with)
-* [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API)
+- [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components)
+- [ElementInternals](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals)
+- [Import with](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import/with)
+- [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API)

@@ -5,8 +5,15 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test",
+    "test:install": "npx playwright install chromium",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "start": "node dev-server.js"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.42.1",
+    "prettier": "^3.8.1"
   },
   "author": "Rasmus Spiegelberg",
   "license": "ISC"

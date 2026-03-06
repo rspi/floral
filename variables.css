@@ -1,6 +1,4 @@
 :root {
-
-
   --ds-space-xs: 4px;
   --ds-space-s: 8px;
   --ds-space-m: 12px;
@@ -10,7 +8,6 @@
 
   --ds-transition: 0.2s ease;
   --ds-radius: 3px;
-
 
   --ds-color-background: #272a3c;
   --ds-color-text: #ebeef5;
@@ -52,9 +49,8 @@
 
   /* Surface */
   --ds-color-surface-1: #222736;
-  --ds-color-surface-2: #2C3144;
-  --ds-color-surface-3: #343A50;
-  --ds-color-surface-4: #3E4560;
-  --ds-color-surface-5: #4A5270;
-
+  --ds-color-surface-2: #2c3144;
+  --ds-color-surface-3: #343a50;
+  --ds-color-surface-4: #3e4560;
+  --ds-color-surface-5: #4a5270;
 }

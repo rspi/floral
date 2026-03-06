@@ -1,0 +1,19 @@
+name: UI Tests
+
+on: [push, pull_request]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Install Playwright Chromium
+        run: npm run test:install
+      - name: Install Playwright Dependencies
+        run: npx playwright install-deps chromium
+      - name: Run tests
+        run: npm test
