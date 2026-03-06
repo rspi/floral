@@ -62,10 +62,6 @@ button {
   --color-background-active: var(--ds-color-rose-70);
 }
 
-:host(:disabled) {
-  pointer-events: none;
-}
-
 :host {
   /* The consumer should own the host, but it has low specificity here so ok to set things that can be overwritten */
   display: inline-block;

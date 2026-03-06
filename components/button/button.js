@@ -54,13 +54,8 @@ window.customElements.define(
       this.internals.form?.reset();
     };
 
-    #handleClick = (e) => {
-      if (this.hasAttribute("disabled") || this.matches(":disabled")) {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-      const type = this.getAttribute("type") ?? "submit";
+    #handleClick = (_) => {
+      const type = this.type ?? "submit";
       if (type === "submit") {
         this.#handleSubmit();
       } else if (type === "reset") {
