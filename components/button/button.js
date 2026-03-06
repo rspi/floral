@@ -33,9 +33,10 @@ window.customElements.define(
     };
 
     #button;
+    #internals;
 
     #handleSubmit = () => {
-      const form = this.internals.form;
+      const form = this.#internals.form;
       if (form) {
         const submitter = document.createElement("button");
         submitter.type = "submit";
@@ -51,7 +52,7 @@ window.customElements.define(
     };
 
     #handleReset = () => {
-      this.internals.form?.reset();
+      this.#internals.form?.reset();
     };
 
     #handleClick = (_) => {
@@ -66,17 +67,17 @@ window.customElements.define(
     formDisabledCallback(disabled) {
       if (disabled) {
         this.#button.setAttribute("disabled", "");
-        this.internals.ariaDisabled = "true";
+        this.#internals.ariaDisabled = "true";
       } else {
         this.#button.removeAttribute("disabled");
-        this.internals.ariaDisabled = "false";
+        this.#internals.ariaDisabled = "false";
       }
     }
 
     constructor() {
       super();
-      this.internals = this.attachInternals();
-      this.internals.role = "button";
+      this.#internals = this.attachInternals();
+      this.#internals.role = "button";
       this.#button = this.shadowRoot.querySelector("button");
       this.addEventListener("click", this.#handleClick);
     }

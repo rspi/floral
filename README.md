@@ -25,5 +25,6 @@ Start the development server:
 ## Interesting web standards used:
 
 * [Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components)
+* [ElementInternals](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals)
 * [Import with](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import/with)
 * [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API)
