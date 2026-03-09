@@ -1,0 +1,15 @@
+:host {
+  /* Core positioning requirements */
+  position: fixed;
+  margin: 0;
+
+  /* Reset default popover styles */
+  border: none;
+  background: transparent;
+  padding: 0;
+  overflow: visible;
+}
+
+:host(:not(:popover-open)) {
+  display: none;
+}

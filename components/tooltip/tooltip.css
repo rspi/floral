@@ -1,0 +1,20 @@
+:host {
+  display: contents;
+}
+
+::slotted(ds-popover) {
+  pointer-events: none;
+}
+
+::slotted(.tooltip-bubble) {
+  background: var(--ds-color-surface-5);
+  color: var(--ds-color-text);
+  padding: var(--ds-space-xs) var(--ds-space-s);
+  border-radius: var(--ds-radius);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--ds-color-surface-4);
+}

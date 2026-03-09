@@ -75,7 +75,14 @@ export class CustomElement extends HTMLElement {
 
   #validateAttributes(value, name) {
     const { attributes } = this.constructor.meta;
-    if (value !== null && !attributes[name].includes(value)) {
+    const allowedValues = attributes[name];
+
+    // If allowedValues is an empty array, it means any value is accepted.
+    if (allowedValues.length === 0) {
+      return;
+    }
+
+    if (value !== null && !allowedValues.includes(value)) {
       throw new Error(`${this.tagName.toLowerCase()} got an unexpected value for argument ${JSON.stringify(name)}:
           Expected one of: ${JSON.stringify(attributes[name])}
           Got: ${JSON.stringify(value)}

@@ -7,18 +7,39 @@
       body {
         background: var(--ds-color-background);
         color: var(--ds-color-text);
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: flex-start;
       }
     </style>
   </head>
   <body>
-    <ds-button variant="primary">primary</ds-button>
-    <ds-button variant="negative">negative</ds-button>
+    <!-- Cleaned up for manual testing -->
+    <div style="padding: 40px; display: flex; flex-direction: column; gap: 40px;">
+      <div>
+        <ds-button id="btn-primary" variant="primary">Primary Button</ds-button>
+        <ds-tooltip anchor="btn-primary" position="top">
+          This is a primary action
+        </ds-tooltip>
+      </div>
+
+      <div>
+        <ds-button id="btn-negative" variant="negative">Negative Button</ds-button>
+        <ds-tooltip anchor="btn-negative" position="right" delay="0">
+          This will delete stuff!
+        </ds-tooltip>
+      </div>
+    </div>
+
     <ds-button>default</ds-button>
     <ds-button disabled>disabled</ds-button>
+
     <form>
       <fieldset>
         <legend>Fieldset</legend>
-        <ds-button type="submit">submit</ds-button>
+        <ds-button name="submit">submit</ds-button>
       </fieldset>
     </form>
   </body>
