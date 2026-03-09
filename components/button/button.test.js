@@ -216,3 +216,37 @@ uiTest("ds-button should NOT trigger click when disabled", async (page) => {
   const clicked = await page.evaluate(() => window.clicked);
   assert.ok(!clicked, "Disabled button should not trigger click");
 });
+
+uiTest(
+  "ds-button should not leak value to subsequent submissions with same name",
+  async (page) => {
+    await page.mount(`
+    <form id="myform">
+      <ds-button name="action" value="save" id="save">Save</ds-button>
+      <ds-button name="action" value="delete" id="delete">Delete</ds-button>
+    </form>
+  `);
+
+    const getFormData = async (triggerId) => {
+      return await page.evaluate((id) => {
+        return new Promise((resolve) => {
+          const form = document.getElementById("myform");
+          const handler = (e) => {
+            e.preventDefault();
+            const fd = new FormData(e.target);
+            form.removeEventListener("submit", handler);
+            resolve(fd.getAll("action"));
+          };
+          form.addEventListener("submit", handler);
+          document.getElementById(id).click();
+        });
+      }, triggerId);
+    };
+
+    const firstSubmission = await getFormData("save");
+    assert.deepStrictEqual(firstSubmission, ["save"]);
+
+    const secondSubmission = await getFormData("delete");
+    assert.deepStrictEqual(secondSubmission, ["delete"]);
+  },
+);

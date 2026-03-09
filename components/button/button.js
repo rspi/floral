@@ -40,6 +40,7 @@ window.customElements.define(
       if (form) {
         this.#internals.setFormValue(this.getAttribute("value"));
         form.requestSubmit();
+        this.#internals.setFormValue(null);
       }
     };
 
