@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "node --test",
+    "test": "node --test --test-timeout=10000 'components/**/*.test.js'",
     "test:install": "npx playwright install chromium",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

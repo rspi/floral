@@ -63,6 +63,82 @@ uiTest("ds-button should submit a form", async (page) => {
   assert.ok(submitted, "Form should have been submitted");
 });
 
+uiTest('ds-button type="button" should NOT submit form', async (page) => {
+  await page.mount(`
+    <form id="myform">
+      <ds-button type="button">Button</ds-button>
+    </form>
+  `);
+  await page.evaluate(() => {
+    window.submitted = false;
+    document.getElementById("myform").addEventListener("submit", (e) => {
+      e.preventDefault();
+      window.submitted = true;
+    });
+  });
+  await page.click("ds-button");
+  const submitted = await page.evaluate(() => window.submitted);
+  assert.ok(
+    !submitted,
+    'Form should NOT have been submitted with type="button"',
+  );
+});
+
+uiTest('ds-button should default to type="submit"', async (page) => {
+  await page.mount(`
+    <form id="myform">
+      <ds-button>Default</ds-button>
+    </form>
+  `);
+  await page.evaluate(() => {
+    window.submitted = false;
+    document.getElementById("myform").addEventListener("submit", (e) => {
+      e.preventDefault();
+      window.submitted = true;
+    });
+  });
+  await page.click("ds-button");
+  const submitted = await page.evaluate(() => window.submitted);
+  assert.ok(submitted, "Form should have been submitted with default type");
+});
+
+uiTest("ds-button should submit its name and value", async (page) => {
+  await page.mount(`
+    <form id="myform">
+      <ds-button name="test-name" value="test-value" type="submit">Submit</ds-button>
+    </form>
+  `);
+  const formData = await page.evaluate(() => {
+    return new Promise((resolve) => {
+      const form = document.getElementById("myform");
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        resolve(Object.fromEntries(fd.entries()));
+      });
+      document.querySelector("ds-button").click();
+    });
+  });
+  assert.strictEqual(
+    formData["test-name"],
+    "test-value",
+    "Form data should include button name and value",
+  );
+});
+
+uiTest('ds-button type="reset" should reset form', async (page) => {
+  await page.mount(`
+    <form id="myform">
+      <input id="myinput" value="initial" />
+      <ds-button type="reset">Reset</ds-button>
+    </form>
+  `);
+  await page.fill("#myinput", "changed");
+  await page.click("ds-button");
+  const inputValue = await page.inputValue("#myinput");
+  assert.strictEqual(inputValue, "initial", "Form should have been reset");
+});
+
 uiTest("ds-button should be activated by Enter key", async (page) => {
   await page.mount('<ds-button id="btn">Enter</ds-button>');
   await page.evaluate(() => {

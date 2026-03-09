@@ -38,16 +38,8 @@ window.customElements.define(
     #handleSubmit = () => {
       const form = this.#internals.form;
       if (form) {
-        const submitter = document.createElement("button");
-        submitter.type = "submit";
-        submitter.style.display = "none";
-        const name = this.getAttribute("name");
-        const value = this.getAttribute("value");
-        if (name) submitter.name = name;
-        if (value) submitter.value = value;
-        form.appendChild(submitter);
-        submitter.click();
-        submitter.remove();
+        this.#internals.setFormValue(this.getAttribute("value"));
+        form.requestSubmit();
       }
     };
 
@@ -55,7 +47,7 @@ window.customElements.define(
       this.#internals.form?.reset();
     };
 
-    #handleClick = (_) => {
+    #handleClick = () => {
       const type = this.type ?? "submit";
       if (type === "submit") {
         this.#handleSubmit();
@@ -79,6 +71,7 @@ window.customElements.define(
       this.#internals = this.attachInternals();
       this.#internals.role = "button";
       this.#button = this.shadowRoot.querySelector("button");
+
       this.addEventListener("click", this.#handleClick);
     }
   },
