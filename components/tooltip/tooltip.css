@@ -1,0 +1,22 @@
+:host {
+  display: inline-block;
+}
+
+#anchor {
+  anchor-name: --a;
+}
+
+#tooltip {
+  position-anchor: --a;
+  position-area: top;
+  position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+
+  /* styles */
+  background: var(--ds-color-surface-4);
+  color: var(--ds-color-text);
+  padding: var(--ds-space-xs) var(--ds-space-s);
+  border-radius: var(--ds-radius);
+  border: 0;
+  margin: var(--ds-space-xs);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
