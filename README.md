@@ -29,3 +29,4 @@ npm start
 - [Import with](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import/with)
 - [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API)
 - [Anchor API](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/anchor)
+- [Starting-style](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@starting-style)

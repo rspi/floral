@@ -52,8 +52,8 @@ uiTest(
       "Tooltip should still be visible immediately after mouseleave",
     );
 
-    // Should be hidden after grace period
-    await tooltip.waitFor({ state: "hidden", timeout: 500 });
+    // Should be hidden after grace period (200ms JS delay + 200ms CSS transition)
+    await tooltip.waitFor({ state: "hidden", timeout: 1000 });
     assert.ok(
       !(await tooltip.isVisible()),
       "Tooltip should be hidden after grace period",
