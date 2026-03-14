@@ -4,6 +4,7 @@ import { CustomElement } from "../../utils.js";
 const html = `
 <div id="tooltip" role="tooltip" popover>
   <slot name="content"></slot>
+  <div id="arrow"></div>
 </div>
 <div id="anchor">
   <slot></slot>
@@ -59,13 +60,14 @@ window.customElements.define(
       super();
       this.#anchor = this.shadowRoot.getElementById("anchor");
       this.#tooltip = this.shadowRoot.getElementById("tooltip");
+      this.#handleShow();
 
       this.#anchor.addEventListener("mouseenter", this.#handleShow);
-      this.#anchor.addEventListener("mouseleave", this.#handleHide);
+      // this.#anchor.addEventListener("mouseleave", this.#handleHide);
       this.#anchor.addEventListener("focusin", this.#handleShow);
-      this.#anchor.addEventListener("focusout", this.#handleHide);
+      // this.#anchor.addEventListener("focusout", this.#handleHide);
       this.#tooltip.addEventListener("mouseenter", this.#handleShow);
-      this.#tooltip.addEventListener("mouseleave", this.#handleHide);
+      // this.#tooltip.addEventListener("mouseleave", this.#handleHide);
     }
   },
 );
