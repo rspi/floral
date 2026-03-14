@@ -75,6 +75,20 @@ export const uiTest = (name, fn) => {
   test(name, async (t) => {
     await setup();
     const page = await browser.newPage();
+
+    let failOnErrors = true;
+    page.on("pageerror", (exception) => {
+      if (failOnErrors) {
+        throw new Error(`Uncaught exception in browser: ${exception.stack}`);
+      }
+    });
+
+    page.on("console", (msg) => {
+      if (failOnErrors && msg.type() === "error") {
+        throw new Error(`Console error in browser: ${msg.text()}`);
+      }
+    });
+
     try {
       page.setDefaultTimeout(5000);
       await page.goto(`http://localhost:${port}/blank`);
@@ -93,6 +107,10 @@ export const uiTest = (name, fn) => {
             ),
           );
         });
+      };
+      // Allow the test function to toggle failOnErrors if needed
+      page.expectErrors = () => {
+        failOnErrors = false;
       };
       await fn(page);
     } finally {
