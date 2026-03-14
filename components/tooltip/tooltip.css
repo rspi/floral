@@ -3,19 +3,21 @@
 }
 
 #anchor {
-  anchor-name: --a;
+  anchor-name: --anchor;
 }
 
 #tooltip {
   /* Position */
-  position-anchor: --a;
+  position-anchor: --anchor;
   position-area: top;
+  anchor-name: --tooltip;
   position-try-fallbacks:
     flip-block,
     flip-inline,
     flip-block flip-inline;
 
   /* Styles */
+  overflow: visible;
   background: var(--ds-color-surface-3);
   color: var(--ds-color-text);
   padding: var(--ds-space-xs) var(--ds-space-s);
@@ -40,6 +42,55 @@
     @starting-style {
       opacity: 0;
       transform: scale(0.95);
+    }
+  }
+}
+
+#arrow {
+  width: 6px;
+  height: 6px;
+  background: var(--ds-color-surface-3);
+  border: 1px solid var(--ds-color-surface-5);
+  padding: 0;
+  margin: 0;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+
+  &.left {
+    transform: translateX(-50%) translateY(-50%) rotate(315deg);
+    left: calc(anchor(--tooltip right) - 1px);
+    top: anchor(--tooltip center);
+  }
+
+  &.right {
+    transform: translateX(-50%) translateY(-50%) rotate(135deg);
+    left: calc(anchor(--tooltip left) + 1px);
+    top: anchor(--tooltip center);
+  }
+
+  &.top {
+    transform: translatex(-50%) translatey(-50%) rotate(45deg);
+    top: calc(anchor(--tooltip bottom) - 1px);
+    left: anchor(--anchor center);
+  }
+
+  &.bottom {
+    transform: translateX(-50%) translateY(-50%) rotate(225deg);
+    top: calc(anchor(--tooltip top) + 1px);
+    left: anchor(--anchor center);
+  }
+
+  /* Animation */
+  opacity: 0;
+  transition:
+    opacity var(--ds-transition),
+    display var(--ds-transition) allow-discrete,
+    overlay var(--ds-transition) allow-discrete;
+
+  &:popover-open {
+    opacity: 1;
+
+    @starting-style {
+      opacity: 0;
     }
   }
 }
