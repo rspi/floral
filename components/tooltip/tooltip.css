@@ -3,17 +3,20 @@
 }
 
 #anchor {
-  anchor-name: --a;
+  anchor-name: --anchor;
 }
 
 #tooltip {
   /* Position */
-  position-anchor: --a;
-  position-area: top;
-  position-try-fallbacks:
-    flip-block,
-    flip-inline,
-    flip-block flip-inline;
+  /* position: relative; */
+  position-anchor: --anchor;
+  position-area: bottom;
+  position-try: flip-block;
+  anchor-name: --tooltip;
+  /* position-try-fallbacks: */
+  /*   flip-block, */
+  /*   flip-inline, */
+  /*   flip-block flip-inline; */
 
   /* Styles */
   overflow: visible;
@@ -26,44 +29,40 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
   /* Animation */
-  opacity: 0;
-  transform: scale(0.95);
-  transition:
-    opacity var(--ds-transition),
-    transform var(--ds-transition),
-    display var(--ds-transition) allow-discrete,
-    overlay var(--ds-transition) allow-discrete;
-
-  &:popover-open {
-    opacity: 1;
-    transform: scale(1);
-
-    @starting-style {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-  }
+  /* opacity: 0; */
+  /* transform: scale(0.95); */
+  /* transition: */
+  /*   opacity var(--ds-transition), */
+  /*   transform var(--ds-transition), */
+  /*   display var(--ds-transition) allow-discrete, */
+  /*   overlay var(--ds-transition) allow-discrete; */
+  /**/
+  /* &:popover-open { */
+  /*   opacity: 1; */
+  /*   transform: scale(1); */
+  /**/
+  /*   @starting-style { */
+  /*     opacity: 0; */
+  /*     transform: scale(0.95); */
+  /*   } */
+  /* } */
 }
 
 #arrow {
-  position-anchor: --a;
   position: absolute;
   width: 12px;
   height: 12px;
-  background: inherit;
-  border: inherit;
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  /* background: inherit; */
+  background: var(--ds-color-surface-3);
+  /* border: inherit; */
+  border: 1px solid var(--ds-color-surface-5);
 
+  /* top: calc(anchor(--tooltip top) - var(--ds-space-xs)); */
+  bottom: anchor(--tooltip top);
+  left: anchor(--anchor center);
+
+  /* clip-path: polygon(100% 0, 100% 100%, 0 100%); */
   /* transform: translateX(-50%) translateY(-50%) rotate(45deg); */
   /* top: 100%; */
   /* left: 50%; */
-
-  transform: translateX(-50%) translateY(-50%) rotate(45deg);
-  top: 100%;
-  left: 50%;
-
-  .top {
-    transform: translateX(-50%) translateY(-50%) rotate(225deg);
-    top: 0;
-  }
 }
