@@ -11,6 +11,35 @@ const html = `
 </div>
   `;
 
+// Quirks
+// 1. The reason #arrow is not inside #tooltip is because anchor() stops working on #arrow when #tooltip is a popover.
+// 2. The reason for popover="manual" is because we need two popover elements.
+// 3. The reason for not using position-try-fallbacks is because it was not working well when scrolling.
+
+const fitsInPosition = (rect, anchorRect, position) => {
+  const inViewport =
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <=
+      (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+
+  if (!inViewport) return false;
+
+  switch (position) {
+    case "top":
+      return rect.bottom <= anchorRect.top;
+    case "bottom":
+      return rect.top >= anchorRect.bottom;
+    case "left":
+      return rect.right <= anchorRect.left;
+    case "right":
+      return rect.left >= anchorRect.right;
+    default:
+      return true;
+  }
+};
+
 window.customElements.define(
   "ds-tooltip",
   class extends CustomElement {
@@ -35,6 +64,13 @@ window.customElements.define(
     #showTimeout;
     #hideTimeout;
 
+    static FALLBACK_MAP = {
+      top: ["bottom", "right", "left"],
+      bottom: ["top", "right", "left"],
+      left: ["right", "top", "bottom"],
+      right: ["left", "top", "bottom"],
+    };
+
     #handleShow = () => {
       clearTimeout(this.#hideTimeout);
       const delay = parseInt(this.delay || "500", 10);
@@ -42,32 +78,43 @@ window.customElements.define(
         this.#tooltip.showPopover();
         this.#arrow.showPopover();
         this.#updatePosition();
+        window.addEventListener("scroll", this.#updatePosition, {
+          passive: true,
+        });
+        window.addEventListener("resize", this.#updatePosition, {
+          passive: true,
+        });
       }, delay);
     };
 
     #handleHide = () => {
       this.#tooltip.hidePopover();
       this.#arrow.hidePopover();
+      window.removeEventListener("scroll", this.#updatePosition);
+      window.removeEventListener("resize", this.#updatePosition);
     };
 
     #updatePosition = () => {
-      const tooltipRect = this.#tooltip.getBoundingClientRect();
+      const preferred = this.position || "top";
+      const trials = [preferred, ...this.constructor.FALLBACK_MAP[preferred]];
       const anchorRect = this.#anchor.getBoundingClientRect();
-      if (tooltipRect.width === 0 || anchorRect.width === 0) return;
 
-      let position;
+      let finalPosition = preferred;
+      for (const pos of trials) {
+        this.#tooltip.style.setProperty("position-area", pos);
+        const rect = this.#tooltip.getBoundingClientRect();
 
-      if (tooltipRect.bottom <= anchorRect.top) {
-        position = "top";
-      } else if (tooltipRect.top >= anchorRect.bottom) {
-        position = "bottom";
-      } else if (tooltipRect.right <= anchorRect.left) {
-        position = "left";
-      } else if (tooltipRect.left >= anchorRect.right) {
-        position = "right";
+        if (rect.width === 0) continue;
+
+        if (fitsInPosition(rect, anchorRect, pos)) {
+          finalPosition = pos;
+          break;
+        }
       }
+      this.#tooltip.style.setProperty("position-area", finalPosition);
+
       this.#arrow.classList.remove("top", "bottom", "left", "right");
-      this.#arrow.classList.add(position);
+      this.#arrow.classList.add(finalPosition);
     };
 
     #handleKeyDown = (e) => {
@@ -102,6 +149,8 @@ window.customElements.define(
     disconnectedCallback() {
       window.removeEventListener("keydown", this.#handleKeyDown);
       window.removeEventListener("click", this.#handleOutsideClick);
+      window.removeEventListener("scroll", this.#updatePosition);
+      window.removeEventListener("resize", this.#updatePosition);
     }
 
     constructor() {

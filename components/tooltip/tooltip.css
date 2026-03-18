@@ -8,13 +8,10 @@
 
 #tooltip {
   /* Position */
+  position: absolute;
   position-anchor: --anchor;
   position-area: top;
   anchor-name: --tooltip;
-  position-try-fallbacks:
-    flip-block,
-    flip-inline,
-    flip-block flip-inline;
 
   /* Styles */
   overflow: visible;
@@ -47,6 +44,7 @@
 }
 
 #arrow {
+  position: absolute;
   width: 6px;
   height: 6px;
   background: var(--ds-color-surface-3);
