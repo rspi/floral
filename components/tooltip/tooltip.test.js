@@ -132,3 +132,35 @@ uiTest("ds-tooltip should handle ESC key to hide", async (page) => {
   await tooltip.waitFor({ state: "hidden" });
   assert.ok(!(await tooltip.isVisible()), "Tooltip should hide on Escape key");
 });
+
+uiTest(
+  "ds-tooltip with clickToOpen should show on click and hide on backdrop click",
+  async (page) => {
+    await page.mount(`
+    <div id="container" style="padding: 100px;">
+      <ds-tooltip clickToOpen delay="0">
+        <button id="anchor">Click me</button>
+        <div slot="content" id="content">Tooltip Content</div>
+      </ds-tooltip>
+      <div id="outside">Outside Element</div>
+    </div>
+  `);
+
+    const tooltip = page.locator("ds-tooltip >> #tooltip");
+    const anchor = page.locator("button#anchor");
+    const outside = page.locator("#outside");
+
+    // Initially hidden
+    assert.ok(!(await tooltip.isVisible()), "Initially hidden");
+
+    // Click the anchor
+    await anchor.click();
+    await tooltip.waitFor({ state: "visible" });
+    assert.ok(await tooltip.isVisible(), "Visible after click");
+
+    // Click outside
+    await outside.click();
+    await tooltip.waitFor({ state: "hidden" });
+    assert.ok(!(await tooltip.isVisible()), "Hidden after outside click");
+  },
+);

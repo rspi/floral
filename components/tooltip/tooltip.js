@@ -20,6 +20,7 @@ window.customElements.define(
     static meta = {
       attributes: {
         position: ["top", "right", "bottom", "left"],
+        clickToOpen: [""],
         delay: ["0", "500"],
       },
       slots: {
@@ -45,11 +46,8 @@ window.customElements.define(
     };
 
     #handleHide = () => {
-      clearTimeout(this.#showTimeout);
-      this.#hideTimeout = setTimeout(() => {
-        this.#tooltip.hidePopover();
-        this.#arrow.hidePopover();
-      }, 200);
+      this.#tooltip.hidePopover();
+      this.#arrow.hidePopover();
     };
 
     #updatePosition = () => {
@@ -78,6 +76,15 @@ window.customElements.define(
       }
     };
 
+    #handleOutsideClick = (e) => {
+      if (!this.clickToOpen || !this.#tooltip.matches(":popover-open")) return;
+
+      const path = e.composedPath();
+      if (!path.includes(this.#tooltip) && !path.includes(this.#anchor)) {
+        this.#handleHide();
+      }
+    };
+
     attributesChanged(name, oldValue, newValue) {
       switch (name) {
         case "position":
@@ -87,19 +94,37 @@ window.customElements.define(
       }
     }
 
+    connectedCallback() {
+      window.addEventListener("keydown", this.#handleKeyDown);
+      window.addEventListener("click", this.#handleOutsideClick);
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener("keydown", this.#handleKeyDown);
+      window.removeEventListener("click", this.#handleOutsideClick);
+    }
+
     constructor() {
       super();
       this.#anchor = this.shadowRoot.getElementById("anchor");
       this.#tooltip = this.shadowRoot.getElementById("tooltip");
       this.#arrow = this.shadowRoot.getElementById("arrow");
 
-      this.#anchor.addEventListener("mouseenter", this.#handleShow);
-      this.#anchor.addEventListener("mouseleave", this.#handleHide);
-      this.#anchor.addEventListener("focusin", this.#handleShow);
-      this.#anchor.addEventListener("focusout", this.#handleHide);
-      this.#tooltip.addEventListener("mouseenter", this.#handleShow);
-      this.#tooltip.addEventListener("mouseleave", this.#handleHide);
-      window.addEventListener("keydown", this.#handleKeyDown);
+      if (this.clickToOpen) {
+        this.#anchor.addEventListener("click", this.#handleShow);
+      } else {
+        this.#anchor.addEventListener("mouseenter", this.#handleShow);
+        this.#anchor.addEventListener("mouseleave", () => {
+          clearTimeout(this.#showTimeout);
+          this.#hideTimeout = setTimeout(() => {
+            this.#handleHide();
+          }, 200);
+        });
+        this.#anchor.addEventListener("focusin", this.#handleShow);
+        this.#anchor.addEventListener("focusout", this.#handleHide);
+        this.#tooltip.addEventListener("mouseenter", this.#handleShow);
+        this.#tooltip.addEventListener("mouseleave", this.#handleHide);
+      }
     }
   },
 );
