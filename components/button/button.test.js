@@ -1,4 +1,4 @@
-import { uiTest } from "../../test-helper.js";
+import { uiTest } from "#test-helper";
 import assert from "node:assert";
 
 uiTest("ds-button should render with text", async (page) => {

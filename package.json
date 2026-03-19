@@ -4,6 +4,9 @@
   "description": "Web component based design system",
   "main": "index.js",
   "type": "module",
+  "imports": {
+    "#test-helper": "./test-helper.js"
+  },
   "scripts": {
     "test": "node --test --test-timeout=10000 components/**/*.test.js",
     "test:install": "npx playwright install chromium",
