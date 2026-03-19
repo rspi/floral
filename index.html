@@ -19,6 +19,19 @@
     </ds-tooltip>
     <ds-button variant="negative">negative</ds-button>
     <ds-button>default</ds-button>
-    <ds-button disabled>disabled</ds-button>
+    <ds-tooltip delay="0">
+      <ds-input disabled value="Disabled input"></ds-input>
+      <div slot="content">Disabled</div>
+    </ds-tooltip>
+
+    <div
+      style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px"
+    >
+      <ds-input placeholder="Enter text..."></ds-input>
+      <ds-input type="password" placeholder="Password"></ds-input>
+      <ds-input value="Pre-filled value"></ds-input>
+      <ds-input disabled value="Disabled input"></ds-input>
+      <input value="normal input" />
+    </div>
   </body>
 </html>

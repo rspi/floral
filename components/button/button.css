@@ -20,7 +20,6 @@ button {
 
   /* lift the button up 2px */
   box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 0px;
-  margin-top: 2px;
   transform: translateY(-2px);
 
   color: var(--ds-color-text);
@@ -39,9 +38,8 @@ button {
   }
 
   &:disabled {
-    cursor: default;
-    pointer-events: none;
     opacity: 0.5;
+    pointer-events: none;
   }
 
   &:focus-visible {
