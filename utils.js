@@ -32,6 +32,14 @@ export class CustomElement extends HTMLElement {
     this.#reflectAttributes();
   }
 
+  connectedCallback() {
+    if (this.autofocus) {
+      requestAnimationFrame(() => {
+        this.focus();
+      });
+    }
+  }
+
   #reflectAttributes() {
     if (this.constructor.meta?.attributes) {
       for (const attrName of Object.keys(this.constructor.meta.attributes)) {
@@ -45,16 +53,20 @@ export class CustomElement extends HTMLElement {
             },
             set(value) {
               if (this.constructor.meta.attributes[attrName].includes("")) {
-                if (value) {
+                const hasAttr = this.hasAttribute(attrName);
+                if (value && !hasAttr) {
                   this.setAttribute(attrName, "");
-                } else {
+                } else if (!value && hasAttr) {
                   this.removeAttribute(attrName);
                 }
               } else {
+                const current = this.getAttribute(attrName);
                 if (value === null || value === undefined) {
-                  this.removeAttribute(attrName);
-                } else {
-                  this.setAttribute(attrName, value);
+                  if (current !== null) {
+                    this.removeAttribute(attrName);
+                  }
+                } else if (String(value) !== current) {
+                  this.setAttribute(attrName, String(value));
                 }
               }
             },
