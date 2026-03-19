@@ -92,6 +92,17 @@ export const uiTest = (name, fn) => {
     try {
       page.setDefaultTimeout(5000);
       await page.goto(`http://localhost:${port}/blank`);
+      await page.addStyleTag({
+        content: `
+          :root {
+            --ds-transition: 0s !important;
+          }
+          *, *::before, *::after {
+            transition-duration: 0s !important;
+            animation-duration: 0s !important;
+          }
+        `,
+      });
       page.mount = async (html) => {
         await page.evaluate((html) => {
           document.body.innerHTML = html;

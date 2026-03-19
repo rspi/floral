@@ -2,10 +2,10 @@ import { uiTest } from "#test-helper";
 import assert from "node:assert";
 
 uiTest(
-  "ds-tooltip should render and show on hover after delay",
+  "ds-tooltip should render and show on hover (no delay)",
   async (page) => {
     await page.mount(`
-    <ds-tooltip delay="500">
+    <ds-tooltip delay="0">
       <button id="anchor">Hover me</button>
       <div slot="content" id="content">Tooltip Content</div>
     </ds-tooltip>
@@ -13,14 +13,11 @@ uiTest(
 
     const tooltip = page.locator("ds-tooltip >> #tooltip");
 
-    // Initially hidden
-    await assert.rejects(tooltip.waitFor({ state: "visible", timeout: 100 }));
+    assert.ok(!(await tooltip.isVisible()), "Initially hidden");
 
-    // Hover over the anchor
     await page.hover("#anchor");
 
-    // Should become visible after delay (500ms)
-    await tooltip.waitFor({ state: "visible", timeout: 1000 });
+    await tooltip.waitFor({ state: "visible", timeout: 200 });
     assert.ok(
       await tooltip.isVisible(),
       "Tooltip should be visible after delay",
@@ -43,16 +40,16 @@ uiTest(
     await page.hover("#anchor");
     await tooltip.waitFor({ state: "visible" });
 
-    // Move mouse away
-    await page.mouse.move(0, 0);
+    // Move mouse away (completely outside)
+    await page.mouse.move(1000, 1000);
 
-    // Should still be visible immediately due to 150ms hide delay
+    // Should still be visible immediately due to 200ms hide delay
     assert.ok(
       await tooltip.isVisible(),
       "Tooltip should still be visible immediately after mouseleave",
     );
 
-    // Should be hidden after grace period (200ms JS delay + 200ms CSS transition)
+    // Should be hidden after grace period (200ms JS delay)
     await tooltip.waitFor({ state: "hidden", timeout: 1000 });
     assert.ok(
       !(await tooltip.isVisible()),
@@ -80,8 +77,8 @@ uiTest(
     const box = await tooltip.boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 
-    // Wait a bit to ensure it doesn't close
-    await page.waitForTimeout(300);
+    // Wait slightly more than the 200ms hardcoded delay to ensure it doesn't close
+    await page.waitForTimeout(250);
     assert.ok(
       await tooltip.isVisible(),
       "Tooltip should stay visible when mouse is over it",
