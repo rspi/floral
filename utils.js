@@ -1,4 +1,6 @@
 export class CustomElement extends HTMLElement {
+  #state = new Map();
+
   static get observedAttributes() {
     if (!this.meta?.attributes) {
       throw new Error(
@@ -33,29 +35,31 @@ export class CustomElement extends HTMLElement {
   }
 
   #reflectAttributes() {
-    if (this.constructor.meta?.attributes) {
-      for (const attrName of Object.keys(this.constructor.meta.attributes)) {
+    const { meta } = this.constructor;
+    if (meta?.attributes) {
+      for (const [attrName, possibleValues] of Object.entries(
+        meta.attributes,
+      )) {
         if (!Object.hasOwn(this, attrName)) {
+          const isBoolean = possibleValues.includes("");
+
           Object.defineProperty(this, attrName, {
             get() {
-              if (this.constructor.meta.attributes[attrName].includes("")) {
-                return this.hasAttribute(attrName);
+              if (this.#state.has(attrName)) {
+                return this.#state.get(attrName);
               }
-              return this.getAttribute(attrName);
+              // Fallback for initial access before attributeChangedCallback has run
+              return isBoolean
+                ? this.hasAttribute(attrName)
+                : this.getAttribute(attrName);
             },
             set(value) {
-              if (this.constructor.meta.attributes[attrName].includes("")) {
-                if (value) {
-                  this.setAttribute(attrName, "");
-                } else {
-                  this.removeAttribute(attrName);
-                }
-              } else {
-                if (value === null || value === undefined) {
-                  this.removeAttribute(attrName);
-                } else {
-                  this.setAttribute(attrName, value);
-                }
+              const oldValue = this[attrName];
+              if (oldValue === value) return;
+
+              this.#state.set(attrName, value);
+              if (this.attributesChanged) {
+                this.attributesChanged(attrName, oldValue, value);
               }
             },
             configurable: true,
@@ -68,8 +72,19 @@ export class CustomElement extends HTMLElement {
 
   attributeChangedCallback(name, oldValue, newValue) {
     this.#validateAttributes(newValue, name);
+
+    const { meta } = this.constructor;
+    const isBoolean = meta.attributes[name].includes("");
+    const value = isBoolean ? newValue !== null : newValue;
+
+    const internalOldValue = this.#state.get(name);
+    // If it's the first time we see this attribute (internalOldValue is undefined),
+    // we always want to call attributesChanged to sync initial state.
+    if (internalOldValue === value) return;
+
+    this.#state.set(name, value);
     if (this.attributesChanged) {
-      this.attributesChanged(name, oldValue, newValue);
+      this.attributesChanged(name, internalOldValue, value);
     }
   }
 
@@ -80,7 +95,9 @@ export class CustomElement extends HTMLElement {
       attributes[name]?.length !== 0 &&
       !attributes[name].includes(value)
     ) {
-      throw new Error(`${this.tagName.toLowerCase()} got an unexpected value for argument ${JSON.stringify(name)}:
+      throw new Error(`${this.tagName.toLowerCase()} got an unexpected value for argument ${JSON.stringify(
+        name,
+      )}:
           Expected one of: ${JSON.stringify(attributes[name])}
           Got: ${JSON.stringify(value)}
           `);

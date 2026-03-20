@@ -49,6 +49,7 @@ window.customElements.define(
     };
 
     #handleClick = () => {
+      if (this.disabled) return;
       const type = this.type ?? "submit";
       if (type === "submit") {
         this.#handleSubmit();
@@ -57,14 +58,20 @@ window.customElements.define(
       }
     };
 
-    formDisabledCallback(disabled) {
-      if (disabled) {
-        this.#button.setAttribute("disabled", "");
-        this.#internals.ariaDisabled = "true";
-      } else {
-        this.#button.removeAttribute("disabled");
-        this.#internals.ariaDisabled = "false";
+    attributesChanged(name, oldValue, newValue) {
+      if (name === "disabled") {
+        if (newValue) {
+          this.#button.setAttribute("disabled", "");
+          this.#internals.ariaDisabled = "true";
+        } else {
+          this.#button.removeAttribute("disabled");
+          this.#internals.ariaDisabled = "false";
+        }
       }
+    }
+
+    formDisabledCallback(disabled) {
+      this.attributesChanged("disabled", !disabled, disabled);
     }
 
     constructor() {

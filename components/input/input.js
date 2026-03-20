@@ -64,17 +64,20 @@ window.customElements.define(
       } else if (name === "required") {
         this.#input.required = newValue !== null;
         this.#updateValidity();
+      } else if (name === "disabled") {
+        if (newValue) {
+          this.#input.setAttribute("disabled", "");
+          this.#internals.ariaDisabled = "true";
+        } else {
+          this.#input.removeAttribute("disabled");
+          this.#internals.ariaDisabled = "false";
+        }
+        this.#updateValidity();
       }
     }
 
     formDisabledCallback(disabled) {
-      if (disabled) {
-        this.#input.setAttribute("disabled", "");
-        this.#internals.ariaDisabled = "true";
-      } else {
-        this.#input.removeAttribute("disabled");
-        this.#internals.ariaDisabled = "false";
-      }
+      this.attributesChanged("disabled", !disabled, disabled);
     }
 
     #handleInput = () => {
