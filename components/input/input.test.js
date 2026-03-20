@@ -186,3 +186,31 @@ uiTest(
     assert.strictEqual(hasValueMissingAfter, false);
   },
 );
+
+uiTest("ds-input should submit form when pressing Enter", async (page) => {
+  await page.mount(`
+    <form id="test-form">
+      <ds-input name="my-input" value="form-value"></ds-input>
+      <button type="submit" id="submit-btn">Submit</button>
+    </form>
+  `);
+
+  await page.evaluate(() => {
+    window.formSubmitted = false;
+    document.getElementById("test-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      window.formSubmitted = true;
+    });
+  });
+
+  const input = page.locator("ds-input >> input");
+  await input.focus();
+  await input.press("Enter");
+
+  const submitted = await page.evaluate(() => window.formSubmitted);
+  assert.strictEqual(
+    submitted,
+    true,
+    "Form should have submitted when pressing Enter in ds-input",
+  );
+});

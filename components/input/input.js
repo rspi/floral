@@ -89,6 +89,12 @@ window.customElements.define(
       );
     };
 
+    #handleKeyDown = (event) => {
+      if (event.key === "Enter" && this.#internals.form) {
+        this.#internals.form.requestSubmit();
+      }
+    };
+
     constructor() {
       super();
       this.#internals = this.attachInternals();
@@ -98,6 +104,8 @@ window.customElements.define(
       this.#input.addEventListener("input", this.#handleInput);
       // default compose: false
       this.#input.addEventListener("change", this.#handleChange);
+
+      this.#input.addEventListener("keydown", this.#handleKeyDown);
 
       this.#updateValidity();
     }
