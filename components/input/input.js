@@ -27,16 +27,43 @@ window.customElements.define(
     #input;
     #internals;
 
+    #updateValidity() {
+      this.#internals.setValidity(
+        this.#input.validity,
+        this.#input.validationMessage,
+        this.#input,
+      );
+    }
+
+    checkValidity() {
+      return this.#internals.checkValidity();
+    }
+
+    reportValidity() {
+      return this.#internals.reportValidity();
+    }
+
+    get validity() {
+      return this.#internals.validity;
+    }
+
+    get validationMessage() {
+      return this.#internals.validationMessage;
+    }
+
     attributesChanged(name, oldValue, newValue) {
       if (name === "value") {
         this.#input.value = newValue || "";
         this.#internals.setFormValue(newValue);
+        this.#updateValidity();
       } else if (name === "type") {
         this.#input.type = newValue || "text";
+        this.#updateValidity();
       } else if (name === "placeholder") {
         this.#input.placeholder = newValue || "";
       } else if (name === "required") {
         this.#input.required = newValue !== null;
+        this.#updateValidity();
       }
     }
 
@@ -53,6 +80,7 @@ window.customElements.define(
     #handleInput = () => {
       this.value = this.#input.value;
       this.#internals.setFormValue(this.value);
+      this.#updateValidity();
     };
 
     #handleChange = () => {
@@ -70,6 +98,8 @@ window.customElements.define(
       this.#input.addEventListener("input", this.#handleInput);
       // default compose: false
       this.#input.addEventListener("change", this.#handleChange);
+
+      this.#updateValidity();
     }
   },
 );

@@ -218,6 +218,24 @@ uiTest("ds-button should NOT trigger click when disabled", async (page) => {
 });
 
 uiTest(
+  "ds-button should be disabled when in a disabled fieldset",
+  async (page) => {
+    await page.mount(`
+    <fieldset disabled>
+      <ds-button></ds-button>
+    </fieldset>
+  `);
+
+    const isDisabled = await page.evaluate(() => {
+      const el = document.querySelector("ds-button");
+      return el.shadowRoot.querySelector("button").disabled;
+    });
+
+    assert.strictEqual(isDisabled, true);
+  },
+);
+
+uiTest(
   "ds-button should not leak value to subsequent submissions with same name",
   async (page) => {
     await page.mount(`
