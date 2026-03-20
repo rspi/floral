@@ -214,3 +214,39 @@ uiTest("ds-input should submit form when pressing Enter", async (page) => {
     "Form should have submitted when pressing Enter in ds-input",
   );
 });
+
+uiTest("ds-input should reset its value when form is reset", async (page) => {
+  await page.mount(`
+  <form id="test-form">
+    <ds-input name="my-input" value="initial-value"></ds-input>
+    <button type="reset" id="reset-btn">Reset</button>
+  </form>
+  `);
+
+  const input = page.locator("ds-input >> input");
+
+  // 1. Change the value
+  await input.fill("changed-value");
+
+  // Verify it changed
+  let currentValue = await page.evaluate(
+    () => document.querySelector("ds-input").value,
+  );
+  assert.strictEqual(currentValue, "changed-value");
+
+  // 2. Reset the form
+  await page.evaluate(() => {
+    const form = document.getElementById("test-form");
+    form.reset();
+  });
+
+  // 3. Verify it reset to initial value
+  const resetValue = await page.evaluate(
+    () => document.querySelector("ds-input").value,
+  );
+  assert.strictEqual(
+    resetValue,
+    "initial-value",
+    "Form reset should restore initial value of ds-input",
+  );
+});

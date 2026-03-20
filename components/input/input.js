@@ -26,6 +26,7 @@ window.customElements.define(
 
     #input;
     #internals;
+    #initialValue = "";
 
     #updateValidity() {
       this.#internals.setValidity(
@@ -77,6 +78,13 @@ window.customElements.define(
       }
     }
 
+    formResetCallback() {
+      this.value = this.#initialValue;
+      this.#input.value = this.#initialValue;
+      this.#internals.setFormValue(this.#initialValue);
+      this.#updateValidity();
+    }
+
     #handleInput = () => {
       this.value = this.#input.value;
       this.#internals.setFormValue(this.value);
@@ -99,6 +107,7 @@ window.customElements.define(
       super();
       this.#internals = this.attachInternals();
       this.#input = this.shadowRoot.querySelector("input");
+      this.#initialValue = this.value || "";
 
       // default compose: true
       this.#input.addEventListener("input", this.#handleInput);
