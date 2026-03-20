@@ -27,26 +27,6 @@ window.customElements.define(
     #input;
     #internals;
 
-    constructor() {
-      super();
-      this.#internals = this.attachInternals();
-      this.#input = this.shadowRoot.querySelector("input");
-
-      this.#input.addEventListener("input", () => {
-        this.value = this.#input.value;
-        this.#internals.setFormValue(this.value);
-        this.dispatchEvent(
-          new Event("input", { bubbles: true, composed: true }),
-        );
-      });
-
-      this.#input.addEventListener("change", () => {
-        this.dispatchEvent(
-          new Event("change", { bubbles: true, composed: true }),
-        );
-      });
-    }
-
     attributesChanged(name, oldValue, newValue) {
       if (name === "value") {
         this.#input.value = newValue || "";
@@ -55,11 +35,41 @@ window.customElements.define(
         this.#input.type = newValue || "text";
       } else if (name === "placeholder") {
         this.#input.placeholder = newValue || "";
-      } else if (name === "disabled") {
-        this.#input.disabled = newValue !== null;
       } else if (name === "required") {
         this.#input.required = newValue !== null;
       }
+    }
+
+    formDisabledCallback(disabled) {
+      if (disabled) {
+        this.#input.setAttribute("disabled", "");
+        this.#internals.ariaDisabled = "true";
+      } else {
+        this.#input.removeAttribute("disabled");
+        this.#internals.ariaDisabled = "false";
+      }
+    }
+
+    #handleInput = () => {
+      this.value = this.#input.value;
+      this.#internals.setFormValue(this.value);
+    };
+
+    #handleChange = () => {
+      this.dispatchEvent(
+        new Event("change", { bubbles: true, composed: true }),
+      );
+    };
+
+    constructor() {
+      super();
+      this.#internals = this.attachInternals();
+      this.#input = this.shadowRoot.querySelector("input");
+
+      // default compose: true
+      this.#input.addEventListener("input", this.#handleInput);
+      // default compose: false
+      this.#input.addEventListener("change", this.#handleChange);
     }
   },
 );

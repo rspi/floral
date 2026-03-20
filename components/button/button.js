@@ -73,6 +73,7 @@ window.customElements.define(
       this.#internals.role = "button";
       this.#button = this.shadowRoot.querySelector("button");
 
+      // default compose: true
       this.addEventListener("click", this.#handleClick);
     }
   },
