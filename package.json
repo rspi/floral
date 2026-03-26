@@ -10,6 +10,8 @@
   "scripts": {
     "test": "node --test --test-timeout=10000 components/**/*.test.js",
     "test:install": "npx playwright install chromium",
+    "skills:package": "node ./.gemini/scripts/package_skill.cjs ./.gemini/skills/floral-test-writer ./.gemini/dist",
+    "skills:install": "gemini skills install ./.gemini/dist/floral-test-writer.skill --scope workspace",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "git config core.hooksPath .githooks",
