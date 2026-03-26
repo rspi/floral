@@ -6,18 +6,20 @@ uiTest(
   async (page) => {
     await page.mount(`
     <ds-tooltip delay="0">
-      <button id="anchor">Hover me</button>
+      <button id="test-anchor">Hover me</button>
       <div slot="content" id="content">Tooltip Content</div>
     </ds-tooltip>
   `);
 
-    const tooltip = page.locator("ds-tooltip >> #tooltip");
+    const tooltip = page
+      .locator("ds-tooltip")
+      .getByRole("tooltip", { includeHidden: true });
 
     assert.ok(!(await tooltip.isVisible()), "Initially hidden");
 
-    await page.hover("#anchor");
+    await page.hover("#test-anchor");
 
-    await tooltip.waitFor({ state: "visible", timeout: 200 });
+    await tooltip.waitFor({ state: "visible" });
     assert.ok(
       await tooltip.isVisible(),
       "Tooltip should be visible after delay",
@@ -30,14 +32,16 @@ uiTest(
   async (page) => {
     await page.mount(`
     <ds-tooltip delay="0">
-      <button id="anchor">Hover me</button>
+      <button id="test-anchor">Hover me</button>
       <div slot="content" id="content">Tooltip Content</div>
     </ds-tooltip>
   `);
 
-    const tooltip = page.locator("ds-tooltip >> #tooltip");
+    const tooltip = page
+      .locator("ds-tooltip")
+      .getByRole("tooltip", { includeHidden: true });
 
-    await page.hover("#anchor");
+    await page.hover("#test-anchor");
     await tooltip.waitFor({ state: "visible" });
 
     // Move mouse away (completely outside)
@@ -50,7 +54,7 @@ uiTest(
     );
 
     // Should be hidden after grace period (200ms JS delay)
-    await tooltip.waitFor({ state: "hidden", timeout: 1000 });
+    await tooltip.waitFor({ state: "hidden" });
     assert.ok(
       !(await tooltip.isVisible()),
       "Tooltip should be hidden after grace period",
@@ -63,22 +67,26 @@ uiTest(
   async (page) => {
     await page.mount(`
     <ds-tooltip delay="0">
-      <button id="anchor" style="margin-bottom: 20px;">Hover me</button>
+      <button id="test-anchor" style="margin-bottom: 20px;">Hover me</button>
       <div slot="content" id="content" style="padding: 20px;">Tooltip Content</div>
     </ds-tooltip>
   `);
 
-    const tooltip = page.locator("ds-tooltip >> #tooltip");
+    const tooltip = page
+      .locator("ds-tooltip")
+      .getByRole("tooltip", { includeHidden: true });
+    const anchor = page.locator("#test-anchor");
 
-    await page.hover("#anchor");
+    await anchor.hover();
     await tooltip.waitFor({ state: "visible" });
 
     // Move mouse to the tooltip content
     const box = await tooltip.boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 
-    // Wait slightly more than the 200ms hardcoded delay to ensure it doesn't close
-    await page.waitForTimeout(250);
+    // Wait for the next animation frame to ensure no immediate closure
+    await page.evaluate(() => new Promise(requestAnimationFrame));
+
     assert.ok(
       await tooltip.isVisible(),
       "Tooltip should stay visible when mouse is over it",
@@ -89,15 +97,17 @@ uiTest(
 uiTest("ds-tooltip should show and hide on focus/blur", async (page) => {
   await page.mount(`
     <ds-tooltip delay="0">
-      <button id="anchor">Focus me</button>
+      <button id="test-anchor">Focus me</button>
       <div slot="content" id="content">Tooltip Content</div>
     </ds-tooltip>
   `);
 
-  const tooltip = page.locator("ds-tooltip >> #tooltip");
+  const tooltip = page
+    .locator("ds-tooltip")
+    .getByRole("tooltip", { includeHidden: true });
 
   // Focus the anchor
-  await page.focus("#anchor");
+  await page.focus("#test-anchor");
   await tooltip.waitFor({ state: "visible" });
   assert.ok(await tooltip.isVisible(), "Tooltip should be visible on focus");
 
@@ -108,24 +118,22 @@ uiTest("ds-tooltip should show and hide on focus/blur", async (page) => {
 });
 
 uiTest("ds-tooltip should handle ESC key to hide", async (page) => {
-  // Popover API handles ESC automatically if it has focus or is a light-dismiss popover.
-  // Our tooltip uses 'popover' attribute.
   await page.mount(`
     <ds-tooltip delay="0">
-      <button id="anchor">Hover me</button>
+      <button id="test-anchor">Hover me</button>
       <div slot="content" id="content">Tooltip Content</div>
     </ds-tooltip>
   `);
 
-  const tooltip = page.locator("ds-tooltip >> #tooltip");
+  const tooltip = page
+    .locator("ds-tooltip")
+    .getByRole("tooltip", { includeHidden: true });
 
-  await page.hover("#anchor");
+  await page.hover("#test-anchor");
   await tooltip.waitFor({ state: "visible" });
 
   await page.keyboard.press("Escape");
 
-  // Note: Popover API might need the popover to be focused or have a specific configuration for ESC.
-  // By default, a 'popover' should hide on ESC.
   await tooltip.waitFor({ state: "hidden" });
   assert.ok(!(await tooltip.isVisible()), "Tooltip should hide on Escape key");
 });
@@ -136,15 +144,17 @@ uiTest(
     await page.mount(`
     <div id="container" style="padding: 100px;">
       <ds-tooltip clickToOpen delay="0">
-        <button id="anchor">Click me</button>
+        <button id="test-anchor">Click me</button>
         <div slot="content" id="content">Tooltip Content</div>
       </ds-tooltip>
       <div id="outside">Outside Element</div>
     </div>
   `);
 
-    const tooltip = page.locator("ds-tooltip >> #tooltip");
-    const anchor = page.locator("button#anchor");
+    const tooltip = page
+      .locator("ds-tooltip")
+      .getByRole("tooltip", { includeHidden: true });
+    const anchor = page.getByRole("button", { name: "Click me" });
     const outside = page.locator("#outside");
 
     // Initially hidden

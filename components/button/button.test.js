@@ -3,8 +3,11 @@ import assert from "node:assert";
 
 uiTest("ds-button should render with text", async (page) => {
   await page.mount("<ds-button>Click me</ds-button>");
-  const button = page.locator("ds-button");
-  await assert.strictEqual(await button.textContent(), "Click me");
+  const host = page.locator("ds-button", { hasText: "Click me" });
+  await host.waitFor({ state: "visible" });
+
+  const text = await host.evaluate((el) => el.innerText.trim());
+  assert.strictEqual(text, "Click me");
 });
 
 uiTest("ds-button should handle variants (visual test)", async (page) => {
@@ -13,10 +16,15 @@ uiTest("ds-button should handle variants (visual test)", async (page) => {
     <ds-button variant="negative">Negative</ds-button>
   `);
 
-  const primaryButton = page.locator('ds-button[variant="primary"] >> button');
-  const negativeButton = page.locator(
-    'ds-button[variant="negative"] >> button',
-  );
+  const primaryButton = page
+    .locator('ds-button[variant="primary"]')
+    .getByRole("button");
+  const negativeButton = page
+    .locator('ds-button[variant="negative"]')
+    .getByRole("button");
+
+  await primaryButton.waitFor({ state: "visible" });
+  await negativeButton.waitFor({ state: "visible" });
 
   const primaryBg = await primaryButton.evaluate(
     (el) => getComputedStyle(el).backgroundColor,
@@ -40,7 +48,8 @@ uiTest("ds-button should handle click events", async (page) => {
       window.clicked = true;
     });
   });
-  await page.click("ds-button");
+  const button = page.getByRole("button", { name: "Click me" });
+  await button.click();
   const clicked = await page.evaluate(() => window.clicked);
   assert.ok(clicked, "Button should have been clicked");
 });
@@ -58,7 +67,8 @@ uiTest("ds-button should submit a form", async (page) => {
       window.submitted = true;
     });
   });
-  await page.click("ds-button");
+  const button = page.getByRole("button", { name: "Submit" });
+  await button.click();
   const submitted = await page.evaluate(() => window.submitted);
   assert.ok(submitted, "Form should have been submitted");
 });
@@ -76,7 +86,8 @@ uiTest('ds-button type="button" should NOT submit form', async (page) => {
       window.submitted = true;
     });
   });
-  await page.click("ds-button");
+  const button = page.getByRole("button", { name: "Button" });
+  await button.click();
   const submitted = await page.evaluate(() => window.submitted);
   assert.ok(
     !submitted,
@@ -97,7 +108,8 @@ uiTest('ds-button should default to type="submit"', async (page) => {
       window.submitted = true;
     });
   });
-  await page.click("ds-button");
+  const button = page.getByRole("button", { name: "Default" });
+  await button.click();
   const submitted = await page.evaluate(() => window.submitted);
   assert.ok(submitted, "Form should have been submitted with default type");
 });
@@ -129,14 +141,19 @@ uiTest("ds-button should submit its name and value", async (page) => {
 uiTest('ds-button type="reset" should reset form', async (page) => {
   await page.mount(`
     <form id="myform">
-      <input id="myinput" value="initial" />
+      <input id="myinput" aria-label="My Input" value="initial" />
       <ds-button type="reset">Reset</ds-button>
     </form>
   `);
-  await page.fill("#myinput", "changed");
-  await page.click("ds-button");
-  const inputValue = await page.inputValue("#myinput");
-  assert.strictEqual(inputValue, "initial", "Form should have been reset");
+  const input = page.getByLabel("My Input");
+  await input.fill("changed");
+  const button = page.getByRole("button", { name: "Reset" });
+  await button.click();
+  assert.strictEqual(
+    await input.inputValue(),
+    "initial",
+    "Form should have been reset",
+  );
 });
 
 uiTest("ds-button should be activated by Enter key", async (page) => {
@@ -147,7 +164,8 @@ uiTest("ds-button should be activated by Enter key", async (page) => {
       window.clicked = true;
     });
   });
-  await page.focus("ds-button");
+  const button = page.getByRole("button", { name: "Enter" });
+  await button.focus();
   await page.keyboard.press("Enter");
   const clicked = await page.evaluate(() => window.clicked);
   assert.ok(clicked, "Button should have been activated by Enter");
@@ -161,7 +179,8 @@ uiTest("ds-button should be activated by Space key", async (page) => {
       window.clicked = true;
     });
   });
-  await page.focus("ds-button");
+  const button = page.getByRole("button", { name: "Space" });
+  await button.focus();
   await page.keyboard.press(" ");
   const clicked = await page.evaluate(() => window.clicked);
   assert.ok(clicked, "Button should have been activated by Space");
@@ -169,7 +188,8 @@ uiTest("ds-button should be activated by Space key", async (page) => {
 
 uiTest("ds-button should delegate focus to internal button", async (page) => {
   await page.mount('<ds-button id="btn">Focus</ds-button>');
-  await page.focus("ds-button");
+  const host = page.locator("ds-button");
+  await host.focus();
 
   const activeElementTag = await page.evaluate(() =>
     document.activeElement.tagName.toLowerCase(),
@@ -195,8 +215,9 @@ uiTest("ds-button should delegate focus to internal button", async (page) => {
 
 uiTest("ds-button should NOT be focusable when disabled", async (page) => {
   await page.mount('<ds-button disabled id="btn">Disabled</ds-button>');
+  const host = page.locator("ds-button");
   // Try to focus it
-  await page.focus("ds-button").catch(() => {});
+  await host.focus().catch(() => {});
   const isFocused = await page.evaluate(() => {
     const btn = document.getElementById("btn");
     return btn.shadowRoot.activeElement !== null;
@@ -212,7 +233,8 @@ uiTest("ds-button should NOT trigger click when disabled", async (page) => {
       window.clicked = true;
     });
   });
-  await page.click("ds-button", { force: true });
+  const button = page.getByRole("button", { name: "Disabled" });
+  await button.click({ force: true });
   const clicked = await page.evaluate(() => window.clicked);
   assert.ok(!clicked, "Disabled button should not trigger click");
 });
@@ -222,16 +244,12 @@ uiTest(
   async (page) => {
     await page.mount(`
     <fieldset disabled>
-      <ds-button></ds-button>
+      <ds-button>Fieldset Disabled</ds-button>
     </fieldset>
   `);
 
-    const isDisabled = await page.evaluate(() => {
-      const el = document.querySelector("ds-button");
-      return el.shadowRoot.querySelector("button").disabled;
-    });
-
-    assert.strictEqual(isDisabled, true);
+    const button = page.getByRole("button", { name: "Fieldset Disabled" });
+    assert.strictEqual(await button.isDisabled(), true);
   },
 );
 
@@ -245,8 +263,8 @@ uiTest(
     </form>
   `);
 
-    const getFormData = async (triggerId) => {
-      return await page.evaluate((id) => {
+    const getFormData = async (name) => {
+      return await page.evaluate((btnName) => {
         return new Promise((resolve) => {
           const form = document.getElementById("myform");
           const handler = (e) => {
@@ -256,15 +274,18 @@ uiTest(
             resolve(fd.getAll("action"));
           };
           form.addEventListener("submit", handler);
-          document.getElementById(id).click();
+          // Find button by text and click
+          const buttons = Array.from(document.querySelectorAll("ds-button"));
+          const btn = buttons.find((b) => b.textContent.trim() === btnName);
+          btn.click();
         });
-      }, triggerId);
+      }, name);
     };
 
-    const firstSubmission = await getFormData("save");
+    const firstSubmission = await getFormData("Save");
     assert.deepStrictEqual(firstSubmission, ["save"]);
 
-    const secondSubmission = await getFormData("delete");
+    const secondSubmission = await getFormData("Delete");
     assert.deepStrictEqual(secondSubmission, ["delete"]);
   },
 );

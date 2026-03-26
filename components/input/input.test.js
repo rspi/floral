@@ -2,20 +2,26 @@ import assert from "node:assert";
 import { uiTest } from "#test-helper";
 
 uiTest("ds-input should be accessible as a textbox", async (page) => {
-  await page.mount(`<ds-input></ds-input>`);
-  const input = page.getByRole("textbox");
-  await assert.doesNotReject(input.waitFor());
+  await page.mount(`<ds-input aria-label="Username"></ds-input>`);
+  // Note: aria-label on host ds-input doesn't automatically propagate to the internal input's accessible name in a way Playwright expects by default.
+  const host = page.locator('ds-input[aria-label="Username"]');
+  const input = host.getByRole("textbox");
+  await input.waitFor({ state: "visible" });
+  assert.ok(await input.isVisible());
 });
 
 uiTest("ds-input should sync value attribute", async (page) => {
-  await page.mount(`<ds-input value="hello"></ds-input>`);
-  const input = page.getByRole("textbox");
+  await page.mount(`<ds-input value="hello" aria-label="Input"></ds-input>`);
+  const host = page.locator('ds-input[aria-label="Input"]');
+  const input = host.getByRole("textbox");
+  await input.waitFor({ state: "visible" });
   assert.strictEqual(await input.inputValue(), "hello");
 });
 
 uiTest("ds-input should update value property when typing", async (page) => {
-  await page.mount(`<ds-input></ds-input>`);
-  const input = page.getByRole("textbox");
+  await page.mount(`<ds-input aria-label="Input"></ds-input>`);
+  const host = page.locator('ds-input[aria-label="Input"]');
+  const input = host.getByRole("textbox");
   await input.fill("world");
   const value = await page.evaluate(
     () => document.querySelector("ds-input").value,
@@ -24,8 +30,9 @@ uiTest("ds-input should update value property when typing", async (page) => {
 });
 
 uiTest("ds-input should handle disabled attribute", async (page) => {
-  await page.mount(`<ds-input disabled></ds-input>`);
-  const input = page.getByRole("textbox");
+  await page.mount(`<ds-input disabled aria-label="Input"></ds-input>`);
+  const host = page.locator('ds-input[aria-label="Input"]');
+  const input = host.getByRole("textbox");
   assert.strictEqual(await input.isDisabled(), true);
 });
 
@@ -34,11 +41,12 @@ uiTest(
   async (page) => {
     await page.mount(`
     <fieldset disabled>
-      <ds-input placeholder="Enter text..."></ds-input>
+      <ds-input placeholder="Enter text..." aria-label="Input"></ds-input>
     </fieldset>
   `);
 
-    const input = page.getByRole("textbox");
+    const host = page.locator('ds-input[aria-label="Input"]');
+    const input = host.getByRole("textbox");
     assert.strictEqual(await input.isDisabled(), true);
   },
 );
@@ -58,7 +66,7 @@ uiTest("ds-input should integrate with forms", async (page) => {
 });
 
 uiTest("ds-input should dispatch 'input' event when typing", async (page) => {
-  await page.mount(`<ds-input></ds-input>`);
+  await page.mount(`<ds-input aria-label="Input"></ds-input>`);
 
   await page.evaluate(() => {
     window.inputEventDispatched = false;
@@ -67,7 +75,8 @@ uiTest("ds-input should dispatch 'input' event when typing", async (page) => {
     });
   });
 
-  const input = page.getByRole("textbox");
+  const host = page.locator('ds-input[aria-label="Input"]');
+  const input = host.getByRole("textbox");
   await input.pressSequentially("h");
 
   const dispatched = await page.evaluate(() => window.inputEventDispatched);
@@ -77,7 +86,7 @@ uiTest("ds-input should dispatch 'input' event when typing", async (page) => {
 uiTest(
   "ds-input should dispatch 'change' event when value changes",
   async (page) => {
-    await page.mount(`<ds-input></ds-input>`);
+    await page.mount(`<ds-input aria-label="Input"></ds-input>`);
 
     await page.evaluate(() => {
       window.changeEventDispatched = false;
@@ -86,7 +95,8 @@ uiTest(
       });
     });
 
-    const input = page.getByRole("textbox");
+    const host = page.locator('ds-input[aria-label="Input"]');
+    const input = host.getByRole("textbox");
     await input.focus();
     await input.pressSequentially("hello");
     await input.press("Enter");
@@ -101,7 +111,7 @@ uiTest(
   async (page) => {
     await page.mount(`
     <form id="test-form">
-      <ds-input required name="my-input"></ds-input>
+      <ds-input required name="my-input" aria-label="Required Input"></ds-input>
       <ds-button type="submit">Submit</ds-button>
     </form>
   `);
@@ -124,7 +134,8 @@ uiTest(
       "Form should NOT have submitted when required input is empty",
     );
 
-    const input = page.getByRole("textbox");
+    const host = page.locator('ds-input[aria-label="Required Input"]');
+    const input = host.getByRole("textbox");
     await input.fill("some value");
     await button.click();
 
@@ -140,7 +151,9 @@ uiTest(
 uiTest(
   "ds-input should expose validity and validationMessage",
   async (page) => {
-    await page.mount(`<ds-input required></ds-input>`);
+    await page.mount(
+      `<ds-input required aria-label="Required Input"></ds-input>`,
+    );
 
     const { isValid, hasValueMissing, validationMessage } = await page.evaluate(
       () => {
@@ -157,7 +170,8 @@ uiTest(
     assert.strictEqual(hasValueMissing, true);
     assert.ok(validationMessage.length > 0);
 
-    const input = page.getByRole("textbox");
+    const host = page.locator('ds-input[aria-label="Required Input"]');
+    const input = host.getByRole("textbox");
     await input.fill("filled");
 
     const { isValidAfter, hasValueMissingAfter } = await page.evaluate(() => {
@@ -176,7 +190,7 @@ uiTest(
 uiTest("ds-input should submit form when pressing Enter", async (page) => {
   await page.mount(`
     <form id="test-form">
-      <ds-input name="my-input" value="form-value"></ds-input>
+      <ds-input name="my-input" value="form-value" aria-label="Input"></ds-input>
       <button type="submit" id="submit-btn">Submit</button>
     </form>
   `);
@@ -189,7 +203,8 @@ uiTest("ds-input should submit form when pressing Enter", async (page) => {
     });
   });
 
-  const input = page.getByRole("textbox");
+  const host = page.locator('ds-input[aria-label="Input"]');
+  const input = host.getByRole("textbox");
   await input.focus();
   await input.press("Enter");
 
@@ -204,12 +219,13 @@ uiTest("ds-input should submit form when pressing Enter", async (page) => {
 uiTest("ds-input should reset its value when form is reset", async (page) => {
   await page.mount(`
   <form id="test-form">
-    <ds-input name="my-input" value="initial-value"></ds-input>
+    <ds-input name="my-input" value="initial-value" aria-label="Reset Input"></ds-input>
     <button type="reset" id="reset-btn">Reset</button>
   </form>
   `);
 
-  const input = page.getByRole("textbox");
+  const host = page.locator('ds-input[aria-label="Reset Input"]');
+  const input = host.getByRole("textbox");
 
   // 1. Change the value
   await input.fill("changed-value");
@@ -229,8 +245,11 @@ uiTest("ds-input should reset its value when form is reset", async (page) => {
 });
 
 uiTest("ds-input should handle readonly attribute", async (page) => {
-  await page.mount(`<ds-input readonly></ds-input>`);
-  const input = page.getByRole("textbox");
+  await page.mount(
+    `<ds-input readonly aria-label="Readonly Input"></ds-input>`,
+  );
+  const host = page.locator('ds-input[aria-label="Readonly Input"]');
+  const input = host.getByRole("textbox");
   assert.strictEqual(await input.isEditable(), false);
 
   await page.evaluate(() => {
@@ -248,7 +267,9 @@ uiTest("ds-input should handle name attribute", async (page) => {
 });
 
 uiTest("ds-input should handle autofocus attribute", async (page) => {
-  await page.mount(`<ds-input autofocus></ds-input>`);
+  await page.mount(
+    `<ds-input autofocus aria-label="Autofocus Input"></ds-input>`,
+  );
 
   const isFocused = await page.evaluate(async () => {
     const el = document.querySelector("ds-input");
@@ -267,9 +288,12 @@ uiTest("ds-input should handle autofocus attribute", async (page) => {
 uiTest(
   "ds-input should have invalid styles when required and empty after interaction",
   async (page) => {
-    await page.mount(`<ds-input required></ds-input>`);
+    await page.mount(
+      `<ds-input required aria-label="Required Input"></ds-input>`,
+    );
 
-    const input = page.getByRole("textbox");
+    const host = page.locator('ds-input[aria-label="Required Input"]');
+    const input = host.getByRole("textbox");
 
     // Trigger :user-invalid by typing and then blurring
     await input.focus();
@@ -301,12 +325,12 @@ uiTest(
 
 uiTest("ds-input should be focusable via label", async (page) => {
   await page.mount(`
-    <label id="label-id" for="my-input">Username</label>
+    <label for="my-input">Username</label>
     <ds-input id="my-input"></ds-input>
   `);
 
-  // Use the label to click
-  await page.locator('label:has-text("Username")').click();
+  // Click the label directly to trigger browser's focus delegation
+  await page.locator("label", { hasText: "Username" }).click();
 
   const isFocused = await page.evaluate(() => {
     const el = document.querySelector("ds-input");
@@ -324,7 +348,7 @@ uiTest("ds-input should be focusable via label", async (page) => {
 });
 
 uiTest("ds-input should delegate focus to internal input", async (page) => {
-  await page.mount(`<ds-input></ds-input>`);
+  await page.mount(`<ds-input aria-label="Input"></ds-input>`);
 
   // Click the host element directly
   await page.locator("ds-input").click();
@@ -352,8 +376,8 @@ uiTest("ds-input should reflect placeholder attribute", async (page) => {
 
 uiTest("ds-input should handle different input types", async (page) => {
   await page.mount(`
-    <ds-input type="email" value="test@example.com"></ds-input>
-    <ds-input type="password" value="secret"></ds-input>
+    <ds-input type="email" value="test@example.com" aria-label="Email"></ds-input>
+    <ds-input type="password" value="secret" aria-label="Password"></ds-input>
   `);
 
   const emailInput = page.locator('ds-input[type="email"] >> input');
