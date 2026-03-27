@@ -1,6 +1,24 @@
 import { uiTest } from "#test-helper";
 import assert from "node:assert";
 
+uiTest("ds-tooltip should show on hover after default delay", async (page) => {
+  await page.mount(`
+    <ds-tooltip>
+      <button id="anchor">Hover me</button>
+      <div slot="content" id="content">Tooltip Content</div>
+    </ds-tooltip>
+  `);
+
+  const tooltip = page.locator("ds-tooltip >> #tooltip");
+
+  await page.hover("#anchor");
+  assert.ok(!(await tooltip.isVisible()), "Initially hidden");
+
+  // Fast forward 500ms (default show delay)
+  await page.clock.fastForward(500);
+  assert.ok(await tooltip.isVisible(), "Visible after show delay");
+});
+
 uiTest(
   "ds-tooltip should render and show on hover (no delay)",
   async (page) => {
@@ -17,10 +35,10 @@ uiTest(
 
     await page.hover("#anchor");
 
-    await tooltip.waitFor({ state: "visible", timeout: 200 });
+    await page.clock.fastForward(0);
     assert.ok(
       await tooltip.isVisible(),
-      "Tooltip should be visible after delay",
+      "Tooltip should be visible after 0 delay",
     );
   },
 );
@@ -38,7 +56,8 @@ uiTest(
     const tooltip = page.locator("ds-tooltip >> #tooltip");
 
     await page.hover("#anchor");
-    await tooltip.waitFor({ state: "visible" });
+    await page.clock.fastForward(0);
+    assert.ok(await tooltip.isVisible(), "Tooltip visible");
 
     // Move mouse away (completely outside)
     await page.mouse.move(1000, 1000);
@@ -50,7 +69,7 @@ uiTest(
     );
 
     // Should be hidden after grace period (200ms JS delay)
-    await tooltip.waitFor({ state: "hidden", timeout: 1000 });
+    await page.clock.fastForward(200);
     assert.ok(
       !(await tooltip.isVisible()),
       "Tooltip should be hidden after grace period",
@@ -71,14 +90,15 @@ uiTest(
     const tooltip = page.locator("ds-tooltip >> #tooltip");
 
     await page.hover("#anchor");
-    await tooltip.waitFor({ state: "visible" });
+    await page.clock.fastForward(0);
+    assert.ok(await tooltip.isVisible(), "Tooltip visible");
 
     // Move mouse to the tooltip content
     const box = await tooltip.boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 
-    // Wait slightly more than the 200ms hardcoded delay to ensure it doesn't close
-    await page.waitForTimeout(250);
+    // Fast forward more than the 200ms hardcoded delay to ensure it doesn't close
+    await page.clock.fastForward(250);
     assert.ok(
       await tooltip.isVisible(),
       "Tooltip should stay visible when mouse is over it",
@@ -98,18 +118,15 @@ uiTest("ds-tooltip should show and hide on focus/blur", async (page) => {
 
   // Focus the anchor
   await page.focus("#anchor");
-  await tooltip.waitFor({ state: "visible" });
+  await page.clock.fastForward(0);
   assert.ok(await tooltip.isVisible(), "Tooltip should be visible on focus");
 
   // Blur the anchor
   await page.evaluate(() => document.activeElement.blur());
-  await tooltip.waitFor({ state: "hidden" });
   assert.ok(!(await tooltip.isVisible()), "Tooltip should be hidden on blur");
 });
 
 uiTest("ds-tooltip should handle ESC key to hide", async (page) => {
-  // Popover API handles ESC automatically if it has focus or is a light-dismiss popover.
-  // Our tooltip uses 'popover' attribute.
   await page.mount(`
     <ds-tooltip delay="0">
       <button id="anchor">Hover me</button>
@@ -120,13 +137,10 @@ uiTest("ds-tooltip should handle ESC key to hide", async (page) => {
   const tooltip = page.locator("ds-tooltip >> #tooltip");
 
   await page.hover("#anchor");
-  await tooltip.waitFor({ state: "visible" });
+  await page.clock.fastForward(0);
+  assert.ok(await tooltip.isVisible(), "Tooltip visible");
 
   await page.keyboard.press("Escape");
-
-  // Note: Popover API might need the popover to be focused or have a specific configuration for ESC.
-  // By default, a 'popover' should hide on ESC.
-  await tooltip.waitFor({ state: "hidden" });
   assert.ok(!(await tooltip.isVisible()), "Tooltip should hide on Escape key");
 });
 
@@ -152,12 +166,11 @@ uiTest(
 
     // Click the anchor
     await anchor.click();
-    await tooltip.waitFor({ state: "visible" });
+    await page.clock.fastForward(0);
     assert.ok(await tooltip.isVisible(), "Visible after click");
 
     // Click outside
     await outside.click();
-    await tooltip.waitFor({ state: "hidden" });
     assert.ok(!(await tooltip.isVisible()), "Hidden after outside click");
   },
 );

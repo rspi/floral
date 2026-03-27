@@ -91,6 +91,7 @@ export const uiTest = (name, fn) => {
 
     try {
       page.setDefaultTimeout(5000);
+      await page.clock.install();
       await page.goto(`http://localhost:${port}/blank`);
       await page.addStyleTag({
         content: `
