@@ -388,3 +388,11 @@ uiTest("ds-input should handle different input types", async (page) => {
   assert.strictEqual(await passwordInput.getAttribute("type"), "password");
   assert.strictEqual(await passwordInput.inputValue(), "secret");
 });
+
+uiTest("ds-input should pass accessibility audit", async (page) => {
+  await page.mount(`
+    <label for="accessible-input">Accessible Input</label>
+    <ds-input id="accessible-input" placeholder="Accessible Input"></ds-input>
+  `);
+  await page.checkA11y();
+});

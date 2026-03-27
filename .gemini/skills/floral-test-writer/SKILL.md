@@ -20,17 +20,20 @@ Your goal is to generate resilient, accessible, and performant tests for Web Com
    - Avoid manual retry loops or `page.waitForFunction()` unless testing complex logic that locators cannot reach.
 6. **No Manual Waiting:** NEVER use `page.waitForTimeout()`. Rely on Playwright's auto-waiting locators and explicit `waitFor` calls.
 7. **A11y & ARIA:** Verify correct ARIA roles, states (`aria-disabled`, `aria-invalid`), and relationships (`aria-describedby`, `aria-controls`).
+   - Use `page.checkA11y()` for general accessibility audits (powered by axe-core).
+   - Use `page.accessibilitySnapshot()` (or `page.accessibility.snapshot()`) to verify the actual accessibility tree, especially for cross-Shadow DOM relationships like `ariaDescribedByElements` that do not appear as DOM attributes.
 8. **Transitions:** Transitions and animations are disabled globally in `uiTest` for stability.
 
 ## Testing Workflow
 
 1. **Setup:** Use the `uiTest` helper from `#test-helper`.
 2. **Mount:** Use `page.mount(html)` to inject the component.
-3. **States:** Test the component in its various states (default, hover, focus, disabled, error, loading).
-4. **Validation:** For input components, verify the Constraint Validation API (`checkValidity`, `validationMessage`).
-5. **Events:** Verify custom events (`input`, `change`, `click`) using `page.evaluate`.
-6. **Form Integration:** Verify `FormData` participation and submission behavior.
-7. **Errors:** Use `page.expectErrors()` if the component is expected to log console errors or throw exceptions during the test.
+3. **Accessibility:** Always include a `page.checkA11y()` call to verify standard compliance.
+4. **States:** Test the component in its various states (default, hover, focus, disabled, error, loading).
+5. **Validation:** For input components, verify the Constraint Validation API (`checkValidity`, `validationMessage`).
+6. **Events:** Verify custom events (`input`, `change`, `click`) using `page.evaluate`.
+7. **Form Integration:** Verify `FormData` participation and submission behavior.
+8. **Errors:** Use `page.expectErrors()` if the component is expected to log console errors or throw exceptions during the test.
 
 ## Resources
 

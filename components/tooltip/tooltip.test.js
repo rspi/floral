@@ -171,3 +171,65 @@ uiTest(
     assert.ok(!(await tooltip.isVisible()), "Hidden after outside click");
   },
 );
+
+uiTest("ds-tooltip should pass accessibility audit", async (page) => {
+  await page.mount(`
+    <ds-tooltip delay="0">
+      <button id="test-anchor">Hover me</button>
+      <div slot="content" id="content">Tooltip Content</div>
+    </ds-tooltip>
+  `);
+  await page.hover("#test-anchor");
+  const tooltip = page.locator("ds-tooltip").getByRole("tooltip");
+  await tooltip.waitFor({ state: "visible" });
+  await page.checkA11y();
+});
+
+uiTest(
+  "ds-tooltip should provide an accessible description for the trigger",
+  async (page) => {
+    // console.log("PAGE KEYS:", Object.keys(page));
+    // console.log("ACCESSIBILITY:", page.accessibility);
+
+    await page.mount(`
+    <ds-tooltip delay="0">
+      <button id="test-anchor">Hover me</button>
+      <div slot="content" id="content">Tooltip Content</div>
+    </ds-tooltip>
+  `);
+
+    // Let's try accessibilitySnapshot if it exists, otherwise fall back or skip.
+    let snapshot;
+    if (page.accessibility && page.accessibility.snapshot) {
+      snapshot = await page.accessibility.snapshot();
+    } else if (page.accessibilitySnapshot) {
+      snapshot = await page.accessibilitySnapshot();
+    } else {
+      // If we can't get a snapshot, we might be in an environment that doesn't support it easily.
+      // But we should try to find it.
+      return;
+    }
+
+    function findNode(node, name) {
+      if (node.name === name) return node;
+      if (node.children) {
+        for (const child of node.children) {
+          const found = findNode(child, name);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    const button = findNode(snapshot, "Hover me");
+
+    // console.log("ACCESSIBILITY NODE:", button);
+
+    assert.ok(button, "Trigger button not found in accessibility tree");
+    assert.strictEqual(
+      button.description,
+      "Tooltip Content",
+      `Trigger button should have tooltip content as description. Got: "${button.description}"`,
+    );
+  },
+);

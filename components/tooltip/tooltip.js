@@ -132,6 +132,17 @@ window.customElements.define(
       }
     };
 
+    #handleSlotChange = () => {
+      const slot = this.shadowRoot.querySelector("slot:not([name])");
+      const assigned = slot.assignedElements();
+      const trigger = assigned.find((el) => el.nodeType === Node.ELEMENT_NODE);
+      if (trigger && "ariaDescribedByElements" in trigger) {
+        // Create a direct reference relationship that bridges the Shadow DOM boundary.
+        // This is the primary way modern browsers resolve accessibility for slotted content.
+        trigger.ariaDescribedByElements = [this.#tooltip];
+      }
+    };
+
     attributesChanged(name, oldValue, newValue) {
       switch (name) {
         case "position":
@@ -158,6 +169,9 @@ window.customElements.define(
       this.#anchor = this.shadowRoot.getElementById("anchor");
       this.#tooltip = this.shadowRoot.getElementById("tooltip");
       this.#arrow = this.shadowRoot.getElementById("arrow");
+
+      const slot = this.shadowRoot.querySelector("slot:not([name])");
+      slot.addEventListener("slotchange", this.#handleSlotChange);
 
       if (this.clickToOpen) {
         this.#anchor.addEventListener("click", this.#handleShow);

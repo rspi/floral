@@ -38,32 +38,58 @@ uiTest("ds-button should render internal button", async (page) => {
   assert.ok(await innerButton.isVisible());
 });
 
-## ARIA Relationships & Accessibility
+## Accessibility Audits and ARIA Relationships
 
-Verify correct ARIA roles and relationships, especially when linking components (e.g., `aria-describedby`, `aria-controls`).
+Always verify standard compliance with `page.checkA11y()` and inspect the accessibility tree for complex relationships.
+
+### General Audit (axe-core)
 
 ```javascript
-uiTest("ds-tooltip should link to its anchor via aria-describedby", async (page) => {
+uiTest("ds-component should pass a11y audit", async (page) => {
+  await page.mount("<ds-component></ds-component>");
+  await page.checkA11y();
+});
+```
+
+### Accessibility Tree Verification (Cross-Shadow DOM)
+
+When using modern APIs like `ariaDescribedByElements` that do not reflect as DOM attributes, verify the relationship using a snapshot of the accessibility tree.
+
+```javascript
+uiTest("ds-tooltip should provide an accessible description", async (page) => {
   await page.mount(`
     <ds-tooltip delay="0">
       <button id="anchor">Hover me</button>
-      <div slot="content" id="content">Tooltip Content</div>
+      <div slot="content">Tooltip Content</div>
     </ds-tooltip>
   `);
 
-  const anchor = page.locator("#anchor");
-  const tooltip = page.locator("ds-tooltip >> #tooltip");
+  // Helper to find a node by name in the tree
+  const findNode = (node, name) => {
+    if (node.name === name) return node;
+    if (node.children) {
+      for (const child of node.children) {
+        const found = findNode(child, name);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
 
-  // Show the tooltip
-  await anchor.hover();
-  await tooltip.waitFor({ state: "visible" });
+  const snapshot = await (page.accessibilitySnapshot
+    ? page.accessibilitySnapshot()
+    : page.accessibility.snapshot());
+  const button = findNode(snapshot, "Hover me");
 
-  // Verify the relationship
-  const tooltipId = await tooltip.getAttribute("id");
-  const describedBy = await anchor.getAttribute("aria-describedby");
-  assert.strictEqual(describedBy, tooltipId, "Anchor should be described by the tooltip");
+  assert.ok(button, "Button not found in accessibility tree");
+  assert.strictEqual(
+    button.description,
+    "Tooltip Content",
+    "Button should be described by the tooltip",
+  );
 });
-````
+```
+`
 
 ## Testing Error States
 
@@ -188,3 +214,4 @@ uiTest(
   },
 );
 ```
+````

@@ -7,6 +7,9 @@ uiTest("ds-component should be accessible", async (page) => {
   // Favor role-based selection (e.g., 'button', 'textbox', 'checkbox', etc.)
   const component = page.getByRole("generic");
   await assert.doesNotReject(component.waitFor());
+
+  // Perform standard accessibility audit
+  await page.checkA11y();
 });
 
 uiTest("ds-component should handle basic state", async (page) => {

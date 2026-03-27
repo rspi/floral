@@ -289,3 +289,8 @@ uiTest(
     assert.deepStrictEqual(secondSubmission, ["delete"]);
   },
 );
+
+uiTest("ds-button should pass accessibility audit", async (page) => {
+  await page.mount("<ds-button>Accessible Button</ds-button>");
+  await page.checkA11y();
+});

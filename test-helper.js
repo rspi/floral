@@ -1,5 +1,7 @@
 import { test, after } from "node:test";
 import { chromium } from "playwright-core";
+import { AxeBuilder } from "@axe-core/playwright";
+import assert from "node:assert";
 import { spawn } from "node:child_process";
 import net from "node:net";
 
@@ -74,7 +76,8 @@ async function setup() {
 export const uiTest = (name, fn) => {
   test(name, async (t) => {
     await setup();
-    const page = await browser.newPage();
+    const context = await browser.newContext();
+    const page = await context.newPage();
 
     let failOnErrors = true;
     page.on("pageerror", (exception) => {
@@ -105,7 +108,7 @@ export const uiTest = (name, fn) => {
       });
       page.mount = async (html) => {
         await page.evaluate((html) => {
-          document.body.innerHTML = html;
+          document.body.innerHTML = `<main>${html}</main>`;
         }, html);
         await page.evaluate(async () => {
           const elements = Array.from(document.body.querySelectorAll("*"));
@@ -119,6 +122,29 @@ export const uiTest = (name, fn) => {
           );
         });
       };
+
+      page.checkA11y = async (selector = "body") => {
+        const results = await new AxeBuilder({ page })
+          .include(selector)
+          .analyze();
+
+        if (results.violations.length > 0) {
+          const message = results.violations
+            .map((v) => {
+              const nodes = v.nodes
+                .map((n) => `  - ${n.html}\n    ${n.failureSummary}`)
+                .join("\n");
+              return `${v.id}: ${v.help}\n  Impact: ${v.impact}\n  Nodes:\n${nodes}`;
+            })
+            .join("\n\n");
+          assert.strictEqual(
+            results.violations.length,
+            0,
+            `Axe violations found:\n${message}`,
+          );
+        }
+      };
+
       // Allow the test function to toggle failOnErrors if needed
       page.expectErrors = () => {
         failOnErrors = false;
@@ -126,6 +152,7 @@ export const uiTest = (name, fn) => {
       await fn(page);
     } finally {
       await page.close();
+      await context.close();
     }
   });
 };
