@@ -45,13 +45,13 @@ button {
   }
 }
 
-:host([variant="primary"]) button {
+:host(:state(variant-primary)) button {
   --color-background: var(--ds-color-lavender-50);
   --color-background-hover: var(--ds-color-lavender-60);
   --color-background-active: var(--ds-color-lavender-70);
 }
 
-:host([variant="negative"]) button {
+:host(:state(variant-negative)) button {
   --color-background: var(--ds-color-rose-50);
   --color-background-hover: var(--ds-color-rose-60);
   --color-background-active: var(--ds-color-rose-70);

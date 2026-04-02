@@ -49,7 +49,7 @@ window.customElements.define(
     static meta = {
       attributes: {
         position: ["top", "right", "bottom", "left"],
-        clickToOpen: [""],
+        clicktoopen: [""],
         delay: ["0", "500"],
       },
       slots: {
@@ -63,6 +63,7 @@ window.customElements.define(
     #anchor;
     #showTimeout;
     #hideTimeout;
+    #abortController;
 
     static FALLBACK_MAP = {
       top: ["bottom", "right", "left"],
@@ -124,7 +125,7 @@ window.customElements.define(
     };
 
     #handleOutsideClick = (e) => {
-      if (!this.clickToOpen || !this.#tooltip.matches(":popover-open")) return;
+      if (!this.clicktoopen || !this.#tooltip.matches(":popover-open")) return;
 
       const path = e.composedPath();
       if (!path.includes(this.#tooltip) && !path.includes(this.#anchor)) {
@@ -137,19 +138,56 @@ window.customElements.define(
       const assigned = slot.assignedElements();
       const trigger = assigned.find((el) => el.nodeType === Node.ELEMENT_NODE);
       if (trigger && "ariaDescribedByElements" in trigger) {
-        // Create a direct reference relationship that bridges the Shadow DOM boundary.
-        // This is the primary way modern browsers resolve accessibility for slotted content.
         trigger.ariaDescribedByElements = [this.#tooltip];
       }
     };
 
-    attributesChanged(name, oldValue, newValue) {
+    #setupListeners() {
+      this.#abortController?.abort();
+      this.#abortController = new AbortController();
+      const { signal } = this.#abortController;
+
+      if (this.clicktoopen) {
+        this.#anchor.addEventListener("click", this.#handleShow, { signal });
+      } else {
+        this.#anchor.addEventListener("mouseenter", this.#handleShow, {
+          signal,
+        });
+        this.#anchor.addEventListener(
+          "mouseleave",
+          () => {
+            clearTimeout(this.#showTimeout);
+            this.#hideTimeout = setTimeout(() => {
+              this.#handleHide();
+            }, 200);
+          },
+          { signal },
+        );
+        this.#anchor.addEventListener("focusin", this.#handleShow, { signal });
+        this.#anchor.addEventListener("focusout", this.#handleHide, { signal });
+        this.#tooltip.addEventListener("mouseenter", this.#handleShow, {
+          signal,
+        });
+        this.#tooltip.addEventListener("mouseleave", this.#handleHide, {
+          signal,
+        });
+      }
+    }
+
+    handleStateChange(name, oldValue, newValue) {
       switch (name) {
         case "position":
           this.#tooltip.style.setProperty("position-area", newValue);
           this.#updatePosition();
           break;
+        case "clicktoopen":
+          this.#setupListeners();
+          break;
       }
+    }
+
+    setup() {
+      this.#setupListeners();
     }
 
     connectedCallback() {
@@ -158,6 +196,7 @@ window.customElements.define(
     }
 
     disconnectedCallback() {
+      this.#abortController?.abort();
       window.removeEventListener("keydown", this.#handleKeyDown);
       window.removeEventListener("click", this.#handleOutsideClick);
       window.removeEventListener("scroll", this.#updatePosition);
@@ -173,21 +212,8 @@ window.customElements.define(
       const slot = this.shadowRoot.querySelector("slot:not([name])");
       slot.addEventListener("slotchange", this.#handleSlotChange);
 
-      if (this.clickToOpen) {
-        this.#anchor.addEventListener("click", this.#handleShow);
-      } else {
-        this.#anchor.addEventListener("mouseenter", this.#handleShow);
-        this.#anchor.addEventListener("mouseleave", () => {
-          clearTimeout(this.#showTimeout);
-          this.#hideTimeout = setTimeout(() => {
-            this.#handleHide();
-          }, 200);
-        });
-        this.#anchor.addEventListener("focusin", this.#handleShow);
-        this.#anchor.addEventListener("focusout", this.#handleHide);
-        this.#tooltip.addEventListener("mouseenter", this.#handleShow);
-        this.#tooltip.addEventListener("mouseleave", this.#handleHide);
-      }
+      // Initial setup will be triggered by handleStateChange for clicktoopen
+      // which is called during the deferred setupStateAndProperties.
     }
   },
 );
