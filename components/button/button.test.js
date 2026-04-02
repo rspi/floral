@@ -290,6 +290,28 @@ uiTest(
   },
 );
 
+uiTest(
+  "ds-button should NOT trigger click when disabled via property",
+  async (page) => {
+    await page.mount('<ds-button id="btn">Property Disabled</ds-button>');
+    const host = page.locator("ds-button");
+
+    await host.evaluate((el) => {
+      window.clicked = false;
+      el.addEventListener("click", () => {
+        window.clicked = true;
+      });
+      el.disabled = true;
+    });
+
+    // Force click because Playwright might normally skip clicking a disabled element
+    await host.click({ force: true });
+
+    const clicked = await page.evaluate(() => window.clicked);
+    assert.ok(!clicked, "Disabled button should not trigger click");
+  },
+);
+
 uiTest("ds-button should pass accessibility audit", async (page) => {
   await page.mount("<ds-button>Accessible Button</ds-button>");
   await page.checkA11y();

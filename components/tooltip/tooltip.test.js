@@ -139,11 +139,11 @@ uiTest("ds-tooltip should handle ESC key to hide", async (page) => {
 });
 
 uiTest(
-  "ds-tooltip with clickToOpen should show on click and hide on backdrop click",
+  "ds-tooltip with clicktoopen should show on click and hide on backdrop click",
   async (page) => {
     await page.mount(`
     <div id="container" style="padding: 100px;">
-      <ds-tooltip clickToOpen delay="0">
+      <ds-tooltip clicktoopen delay="0">
         <button id="test-anchor">Click me</button>
         <div slot="content" id="content">Tooltip Content</div>
       </ds-tooltip>
@@ -171,6 +171,28 @@ uiTest(
     assert.ok(!(await tooltip.isVisible()), "Hidden after outside click");
   },
 );
+
+uiTest("ds-tooltip with clicktoopen should NOT show on hover", async (page) => {
+  await page.mount(`
+    <ds-tooltip clicktoopen delay="0">
+      <button>Hover me</button>
+      <div slot="content">Tooltip content</div>
+    </ds-tooltip>
+  `);
+
+  const host = page.locator("ds-tooltip");
+  const button = host.locator("button");
+  const tooltip = host.getByRole("tooltip", { includeHidden: true });
+
+  await button.hover();
+  // Use a short wait to ensure no async show happens
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  assert.strictEqual(await tooltip.isVisible(), false);
+
+  await button.click();
+  await tooltip.waitFor({ state: "visible" });
+  assert.strictEqual(await tooltip.isVisible(), true);
+});
 
 uiTest("ds-tooltip should pass accessibility audit", async (page) => {
   await page.mount(`

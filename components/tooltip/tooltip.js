@@ -49,7 +49,7 @@ window.customElements.define(
     static meta = {
       attributes: {
         position: ["top", "right", "bottom", "left"],
-        clickToOpen: [""],
+        clicktoopen: [""],
         delay: ["0", "500"],
       },
       slots: {
@@ -63,6 +63,8 @@ window.customElements.define(
     #anchor;
     #showTimeout;
     #hideTimeout;
+    #hostController;
+    #positionController;
 
     static FALLBACK_MAP = {
       top: ["bottom", "right", "left"],
@@ -78,11 +80,18 @@ window.customElements.define(
         this.#tooltip.showPopover();
         this.#arrow.showPopover();
         this.#updatePosition();
+
+        this.#positionController?.abort();
+        this.#positionController = new AbortController();
+        const { signal } = this.#positionController;
+
         window.addEventListener("scroll", this.#updatePosition, {
           passive: true,
+          signal,
         });
         window.addEventListener("resize", this.#updatePosition, {
           passive: true,
+          signal,
         });
       }, delay);
     };
@@ -90,8 +99,7 @@ window.customElements.define(
     #handleHide = () => {
       this.#tooltip.hidePopover();
       this.#arrow.hidePopover();
-      window.removeEventListener("scroll", this.#updatePosition);
-      window.removeEventListener("resize", this.#updatePosition);
+      this.#positionController?.abort();
     };
 
     #updatePosition = () => {
@@ -124,7 +132,7 @@ window.customElements.define(
     };
 
     #handleOutsideClick = (e) => {
-      if (!this.clickToOpen || !this.#tooltip.matches(":popover-open")) return;
+      if (!this.clicktoopen || !this.#tooltip.matches(":popover-open")) return;
 
       const path = e.composedPath();
       if (!path.includes(this.#tooltip) && !path.includes(this.#anchor)) {
@@ -137,31 +145,68 @@ window.customElements.define(
       const assigned = slot.assignedElements();
       const trigger = assigned.find((el) => el.nodeType === Node.ELEMENT_NODE);
       if (trigger && "ariaDescribedByElements" in trigger) {
-        // Create a direct reference relationship that bridges the Shadow DOM boundary.
-        // This is the primary way modern browsers resolve accessibility for slotted content.
         trigger.ariaDescribedByElements = [this.#tooltip];
       }
     };
 
-    attributesChanged(name, oldValue, newValue) {
+    #setupListeners() {
+      this.#hostController?.abort();
+      this.#hostController = new AbortController();
+      const { signal } = this.#hostController;
+
+      window.addEventListener("keydown", this.#handleKeyDown, { signal });
+      window.addEventListener("click", this.#handleOutsideClick, { signal });
+
+      if (this.clicktoopen) {
+        this.#anchor.addEventListener("click", this.#handleShow, { signal });
+      } else {
+        this.#anchor.addEventListener("mouseenter", this.#handleShow, {
+          signal,
+        });
+        this.#anchor.addEventListener(
+          "mouseleave",
+          () => {
+            clearTimeout(this.#showTimeout);
+            this.#hideTimeout = setTimeout(() => {
+              this.#handleHide();
+            }, 200);
+          },
+          { signal },
+        );
+        this.#anchor.addEventListener("focusin", this.#handleShow, { signal });
+        this.#anchor.addEventListener("focusout", this.#handleHide, { signal });
+        this.#tooltip.addEventListener("mouseenter", this.#handleShow, {
+          signal,
+        });
+        this.#tooltip.addEventListener("mouseleave", this.#handleHide, {
+          signal,
+        });
+      }
+    }
+
+    handleStateChange(name, oldValue, newValue) {
       switch (name) {
         case "position":
           this.#tooltip.style.setProperty("position-area", newValue);
           this.#updatePosition();
           break;
+        case "clicktoopen":
+          this.#setupListeners();
+          break;
       }
     }
 
+    setup() {
+      this.#setupListeners();
+    }
+
     connectedCallback() {
-      window.addEventListener("keydown", this.#handleKeyDown);
-      window.addEventListener("click", this.#handleOutsideClick);
+      this.#setupListeners();
     }
 
     disconnectedCallback() {
-      window.removeEventListener("keydown", this.#handleKeyDown);
-      window.removeEventListener("click", this.#handleOutsideClick);
-      window.removeEventListener("scroll", this.#updatePosition);
-      window.removeEventListener("resize", this.#updatePosition);
+      this.#hostController?.abort();
+      this.#positionController?.abort();
     }
 
     constructor() {
@@ -172,22 +217,6 @@ window.customElements.define(
 
       const slot = this.shadowRoot.querySelector("slot:not([name])");
       slot.addEventListener("slotchange", this.#handleSlotChange);
-
-      if (this.clickToOpen) {
-        this.#anchor.addEventListener("click", this.#handleShow);
-      } else {
-        this.#anchor.addEventListener("mouseenter", this.#handleShow);
-        this.#anchor.addEventListener("mouseleave", () => {
-          clearTimeout(this.#showTimeout);
-          this.#hideTimeout = setTimeout(() => {
-            this.#handleHide();
-          }, 200);
-        });
-        this.#anchor.addEventListener("focusin", this.#handleShow);
-        this.#anchor.addEventListener("focusout", this.#handleHide);
-        this.#tooltip.addEventListener("mouseenter", this.#handleShow);
-        this.#tooltip.addEventListener("mouseleave", this.#handleHide);
-      }
     }
   },
 );

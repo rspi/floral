@@ -3,11 +3,11 @@
   width: 200px;
 }
 
-:host([width="tiny"]) {
+:host(:state(width-tiny)) {
   width: 60px;
 }
 
-:host([width="full"]) {
+:host(:state(width-full)) {
   width: 100%;
 }
 
