@@ -290,6 +290,20 @@ uiTest(
   },
 );
 
+uiTest("ds-button should reflect disabled property to internal button", async (page) => {
+  await page.mount('<ds-button id="btn">Property Disabled</ds-button>');
+  const host = page.locator("ds-button");
+  
+  await host.evaluate((el) => {
+    el.disabled = true;
+  });
+
+  const isDisabled = await host.evaluate((el) => {
+    return el.shadowRoot.querySelector("button").hasAttribute("disabled");
+  });
+  assert.ok(isDisabled, "Internal button should have disabled attribute");
+});
+
 uiTest("ds-button should pass accessibility audit", async (page) => {
   await page.mount("<ds-button>Accessible Button</ds-button>");
   await page.checkA11y();

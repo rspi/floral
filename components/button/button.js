@@ -34,6 +34,22 @@ window.customElements.define(
 
     #button;
 
+    #updateDisabledState(disabled) {
+      if (disabled) {
+        this.#button.setAttribute("disabled", "");
+        this.internals.ariaDisabled = "true";
+      } else {
+        this.#button.removeAttribute("disabled");
+        this.internals.ariaDisabled = "false";
+      }
+    }
+
+    handleStateChange(name, oldValue, newValue) {
+      if (name === "disabled") {
+        this.#updateDisabledState(newValue);
+      }
+    }
+
     #handleSubmit = () => {
       const form = this.internals.form;
       if (form) {
@@ -57,13 +73,7 @@ window.customElements.define(
     };
 
     formDisabledCallback(disabled) {
-      if (disabled) {
-        this.#button.setAttribute("disabled", "");
-        this.internals.ariaDisabled = "true";
-      } else {
-        this.#button.removeAttribute("disabled");
-        this.internals.ariaDisabled = "false";
-      }
+      this.#updateDisabledState(disabled);
     }
 
     constructor() {

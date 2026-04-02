@@ -40,6 +40,16 @@ window.customElements.define(
       );
     }
 
+    #updateDisabledState(disabled) {
+      if (disabled) {
+        this.#input.setAttribute("disabled", "");
+        this.internals.ariaDisabled = "true";
+      } else {
+        this.#input.removeAttribute("disabled");
+        this.internals.ariaDisabled = "false";
+      }
+    }
+
     checkValidity() {
       return this.internals.checkValidity();
     }
@@ -77,6 +87,8 @@ window.customElements.define(
         this.#input.readOnly = !!newValue;
       } else if (name === "autofocus") {
         this.#input.autofocus = !!newValue;
+      } else if (name === "disabled") {
+        this.#updateDisabledState(newValue);
       }
     }
 
@@ -89,13 +101,7 @@ window.customElements.define(
     }
 
     formDisabledCallback(disabled) {
-      if (disabled) {
-        this.#input.setAttribute("disabled", "");
-        this.internals.ariaDisabled = "true";
-      } else {
-        this.#input.removeAttribute("disabled");
-        this.internals.ariaDisabled = "false";
-      }
+      this.#updateDisabledState(disabled);
     }
 
     formResetCallback() {
