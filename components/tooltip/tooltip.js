@@ -63,7 +63,8 @@ window.customElements.define(
     #anchor;
     #showTimeout;
     #hideTimeout;
-    #abortController;
+    #hostController;
+    #positionController;
 
     static FALLBACK_MAP = {
       top: ["bottom", "right", "left"],
@@ -79,11 +80,18 @@ window.customElements.define(
         this.#tooltip.showPopover();
         this.#arrow.showPopover();
         this.#updatePosition();
+
+        this.#positionController?.abort();
+        this.#positionController = new AbortController();
+        const { signal } = this.#positionController;
+
         window.addEventListener("scroll", this.#updatePosition, {
           passive: true,
+          signal,
         });
         window.addEventListener("resize", this.#updatePosition, {
           passive: true,
+          signal,
         });
       }, delay);
     };
@@ -91,8 +99,7 @@ window.customElements.define(
     #handleHide = () => {
       this.#tooltip.hidePopover();
       this.#arrow.hidePopover();
-      window.removeEventListener("scroll", this.#updatePosition);
-      window.removeEventListener("resize", this.#updatePosition);
+      this.#positionController?.abort();
     };
 
     #updatePosition = () => {
@@ -143,10 +150,15 @@ window.customElements.define(
     };
 
     #setupListeners() {
-      this.#abortController?.abort();
-      this.#abortController = new AbortController();
-      const { signal } = this.#abortController;
+      this.#hostController?.abort();
+      this.#hostController = new AbortController();
+      const { signal } = this.#hostController;
 
+      // Window listeners
+      window.addEventListener("keydown", this.#handleKeyDown, { signal });
+      window.addEventListener("click", this.#handleOutsideClick, { signal });
+
+      // Interaction listeners
       if (this.clicktoopen) {
         this.#anchor.addEventListener("click", this.#handleShow, { signal });
       } else {
@@ -191,16 +203,12 @@ window.customElements.define(
     }
 
     connectedCallback() {
-      window.addEventListener("keydown", this.#handleKeyDown);
-      window.addEventListener("click", this.#handleOutsideClick);
+      this.#setupListeners();
     }
 
     disconnectedCallback() {
-      this.#abortController?.abort();
-      window.removeEventListener("keydown", this.#handleKeyDown);
-      window.removeEventListener("click", this.#handleOutsideClick);
-      window.removeEventListener("scroll", this.#updatePosition);
-      window.removeEventListener("resize", this.#updatePosition);
+      this.#hostController?.abort();
+      this.#positionController?.abort();
     }
 
     constructor() {
@@ -211,9 +219,6 @@ window.customElements.define(
 
       const slot = this.shadowRoot.querySelector("slot:not([name])");
       slot.addEventListener("slotchange", this.#handleSlotChange);
-
-      // Initial setup will be triggered by handleStateChange for clicktoopen
-      // which is called during the deferred setupStateAndProperties.
     }
   },
 );
