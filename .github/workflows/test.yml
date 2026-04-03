@@ -28,8 +28,5 @@ jobs:
       - name: Install Playwright Browsers & Deps (on cache miss)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright-core install --with-deps chromium
-      - name: Install Playwright Deps (on cache hit)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright-core install-deps chromium
       - name: Run tests
         run: npm test
