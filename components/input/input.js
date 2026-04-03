@@ -81,12 +81,12 @@ window.customElements.define(
       } else if (name === "placeholder") {
         this.#input.placeholder = newValue || "";
       } else if (name === "required") {
-        this.#input.required = !!newValue;
+        this.#input.required = newValue;
         this.#updateValidity();
       } else if (name === "readonly") {
-        this.#input.readOnly = !!newValue;
+        this.#input.readOnly = newValue;
       } else if (name === "autofocus") {
-        this.#input.autofocus = !!newValue;
+        this.#input.autofocus = newValue;
       } else if (name === "disabled") {
         this.#updateDisabledState(newValue);
       }

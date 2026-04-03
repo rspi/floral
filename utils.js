@@ -67,12 +67,14 @@ export class CustomElement extends HTMLElement {
       Object.defineProperty(this, attrName, {
         get: () => this.#state.get(attrName),
         set: (value) => {
-          this.#validateAttributes(value, attrName);
+          const processedValue = isBoolean ? !!value : value;
+
+          this.#validateAttributes(processedValue, attrName);
           const oldValue = this.#state.get(attrName);
-          if (oldValue !== value) {
-            this.#state.set(attrName, value);
-            this.#updateInternalsState(attrName, value);
-            this.handleStateChange?.(attrName, oldValue, value);
+          if (oldValue !== processedValue) {
+            this.#state.set(attrName, processedValue);
+            this.#updateInternalsState(attrName, processedValue);
+            this.handleStateChange?.(attrName, oldValue, processedValue);
           }
         },
         configurable: true,

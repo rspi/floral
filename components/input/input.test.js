@@ -405,6 +405,47 @@ uiTest("ds-input should handle disabled property", async (page) => {
   assert.strictEqual(await input.isDisabled(), true);
 });
 
+uiTest(
+  "ds-input should handle boolean properties and coercion",
+  async (page) => {
+    await page.mount(`<ds-input aria-label="Input"></ds-input>`);
+    const host = page.locator('ds-input[aria-label="Input"]');
+    const input = host.locator("input");
+
+    await host.evaluate((el) => {
+      el.required = "truthy string";
+      el.readonly = 1;
+      el.autofocus = true;
+    });
+
+    // Verify host properties are coerced to booleans
+    assert.strictEqual(await host.evaluate((el) => el.required), true);
+    assert.strictEqual(await host.evaluate((el) => el.readonly), true);
+    assert.strictEqual(await host.evaluate((el) => el.autofocus), true);
+
+    // Verify internal input properties
+    assert.strictEqual(await input.evaluate((el) => el.required), true);
+    assert.strictEqual(await input.evaluate((el) => el.readOnly), true);
+    assert.strictEqual(await input.evaluate((el) => el.autofocus), true);
+
+    await host.evaluate((el) => {
+      el.required = "";
+      el.readonly = 0;
+      el.autofocus = false;
+    });
+
+    // Verify host properties are coerced to booleans (empty string is falsy for properties)
+    assert.strictEqual(await host.evaluate((el) => el.required), false);
+    assert.strictEqual(await host.evaluate((el) => el.readonly), false);
+    assert.strictEqual(await host.evaluate((el) => el.autofocus), false);
+
+    // Verify internal input properties
+    assert.strictEqual(await input.evaluate((el) => el.required), false);
+    assert.strictEqual(await input.evaluate((el) => el.readOnly), false);
+    assert.strictEqual(await input.evaluate((el) => el.autofocus), false);
+  },
+);
+
 uiTest("ds-input should pass accessibility audit", async (page) => {
   await page.mount(`
     <label for="accessible-input">Accessible Input</label>
