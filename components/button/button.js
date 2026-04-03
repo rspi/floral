@@ -63,7 +63,11 @@ window.customElements.define(
       this.internals.form?.reset();
     };
 
-    #handleClick = () => {
+    #handleClick = (e) => {
+      if (this.disabled) {
+        e.stopImmediatePropagation();
+        return;
+      }
       const type = this.type ?? "submit";
       if (type === "submit") {
         this.#handleSubmit();

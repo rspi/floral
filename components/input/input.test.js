@@ -3,7 +3,6 @@ import { uiTest } from "#test-helper";
 
 uiTest("ds-input should be accessible as a textbox", async (page) => {
   await page.mount(`<ds-input aria-label="Username"></ds-input>`);
-  // Note: aria-label on host ds-input doesn't automatically propagate to the internal input's accessible name in a way Playwright expects by default.
   const host = page.locator('ds-input[aria-label="Username"]');
   const input = host.getByRole("textbox");
   await input.waitFor({ state: "visible" });
@@ -366,8 +365,12 @@ uiTest("ds-input should delegate focus to internal input", async (page) => {
 });
 
 uiTest("ds-input should reflect placeholder attribute", async (page) => {
-  await page.mount(`<ds-input placeholder="Enter your name"></ds-input>`);
-  const internalInput = page.locator("ds-input >> input");
+  await page.mount(
+    `<ds-input placeholder="Enter your name" aria-label="Input"></ds-input>`,
+  );
+  const host = page.locator('ds-input[aria-label="Input"]');
+  // Target the internal input directly via shadow DOM
+  const internalInput = host.locator("input");
   assert.strictEqual(
     await internalInput.getAttribute("placeholder"),
     "Enter your name",
@@ -380,13 +383,27 @@ uiTest("ds-input should handle different input types", async (page) => {
     <ds-input type="password" value="secret" aria-label="Password"></ds-input>
   `);
 
-  const emailInput = page.locator('ds-input[type="email"] >> input');
-  assert.strictEqual(await emailInput.getAttribute("type"), "email");
+  const emailHost = page.locator('ds-input[type="email"]');
+  const emailInput = emailHost.getByRole("textbox");
+  // Type is email, but it's still a textbox role.
+  assert.strictEqual(await emailHost.evaluate((el) => el.type), "email");
   assert.strictEqual(await emailInput.inputValue(), "test@example.com");
 
-  const passwordInput = page.locator('ds-input[type="password"] >> input');
-  assert.strictEqual(await passwordInput.getAttribute("type"), "password");
-  assert.strictEqual(await passwordInput.inputValue(), "secret");
+  const passwordHost = page.locator('ds-input[type="password"]');
+  assert.strictEqual(await passwordHost.evaluate((el) => el.type), "password");
+  assert.strictEqual(await passwordHost.evaluate((el) => el.value), "secret");
+});
+
+uiTest("ds-input should handle disabled property", async (page) => {
+  await page.mount(`<ds-input aria-label="Input"></ds-input>`);
+  const host = page.locator('ds-input[aria-label="Input"]');
+  const input = host.getByRole("textbox");
+
+  await host.evaluate((el) => {
+    el.disabled = true;
+  });
+
+  assert.strictEqual(await input.isDisabled(), true);
 });
 
 uiTest("ds-input should pass accessibility audit", async (page) => {

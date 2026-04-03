@@ -123,7 +123,8 @@ export class CustomElement extends HTMLElement {
   }
 
   #validateAttributes(value, name) {
-    const { attributes } = this.constructor.meta;
+    const attributes = this.constructor.meta?.attributes;
+
     const isBoolean = attributes[name]?.includes("");
 
     if (isBoolean && typeof value === "boolean") {
