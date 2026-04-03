@@ -12,9 +12,17 @@ jobs:
           node-version: "24"
           cache: "npm"
       - run: npm ci --ignore-scripts
-      - name: Install Playwright Chromium
-        run: npm run test:install
-      - name: Install Playwright Dependencies
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+      - name: Install Playwright Browsers & Deps (on cache miss)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Install Playwright Deps (on cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
       - name: Run tests
         run: npm test
