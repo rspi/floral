@@ -20,9 +20,9 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
       - name: Install Playwright Browsers & Deps (on cache miss)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright-core install --with-deps chromium
       - name: Install Playwright Deps (on cache hit)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: npx playwright-core install-deps chromium
       - name: Run tests
         run: npm test

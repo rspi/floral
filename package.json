@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "node --test --test-timeout=10000 components/**/*.test.js",
-    "test:install": "npx playwright install chromium",
+    "test:install": "npx playwright-core install chromium",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "git config core.hooksPath .githooks",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
-    "playwright-core": "^1.42.1",
+    "playwright-core": "^1.58.2",
     "prettier": "^3.8.1"
   },
   "author": "Rasmus Spiegelberg",
