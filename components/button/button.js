@@ -22,6 +22,7 @@ window.customElements.define(
         disabled: [""],
         variant: ["default", "primary", "negative"],
         type: ["submit", "reset", "button"],
+        value: [],
       },
       slots: {
         default: "The button content.",
@@ -53,7 +54,7 @@ window.customElements.define(
     #handleSubmit = () => {
       const form = this.internals.form;
       if (form) {
-        this.internals.setFormValue(this.getAttribute("value"));
+        this.internals.setFormValue(this.value);
         form.requestSubmit();
         this.internals.setFormValue(null);
       }
