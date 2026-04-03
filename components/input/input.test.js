@@ -385,7 +385,6 @@ uiTest("ds-input should handle different input types", async (page) => {
 
   const emailHost = page.locator('ds-input[type="email"]');
   const emailInput = emailHost.getByRole("textbox");
-  // Type is email, but it's still a textbox role.
   assert.strictEqual(await emailHost.evaluate((el) => el.type), "email");
   assert.strictEqual(await emailInput.inputValue(), "test@example.com");
 
