@@ -154,11 +154,9 @@ window.customElements.define(
       this.#hostController = new AbortController();
       const { signal } = this.#hostController;
 
-      // Window listeners
       window.addEventListener("keydown", this.#handleKeyDown, { signal });
       window.addEventListener("click", this.#handleOutsideClick, { signal });
 
-      // Interaction listeners
       if (this.clicktoopen) {
         this.#anchor.addEventListener("click", this.#handleShow, { signal });
       } else {
