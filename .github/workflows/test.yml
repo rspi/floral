@@ -11,7 +11,14 @@ jobs:
         with:
           node-version: "24"
           cache: "npm"
+      - name: Cache node_modules
+        id: node-modules-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
       - run: npm ci --ignore-scripts
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
       - name: Cache Playwright Browsers
         id: playwright-cache
         uses: actions/cache@v4
