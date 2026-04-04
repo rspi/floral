@@ -172,6 +172,55 @@ uiTest("ds-input should dispatch 'input' event when typing", async (page) => {
 });
 ```
 
+## Testing Time-Based Behaviors (Delays & Timeouts)
+
+Use the Playwright Clock API to test components with delays (e.g., tooltips, snackbars, or async states) instantly and deterministically.
+
+```javascript
+uiTest("ds-tooltip should show after delay on hover", async (page) => {
+  // 1. Install the clock BEFORE mounting or triggering timing
+  await page.clock.install();
+
+  await page.mount(`
+    <ds-tooltip delay="500">
+      <button id="anchor">Hover me</button>
+      <div slot="content">Tooltip Content</div>
+    </ds-tooltip>
+  `);
+
+  const tooltip = page.locator("ds-tooltip").getByRole("tooltip", { includeHidden: true });
+  assert.ok(!(await tooltip.isVisible()), "Initially hidden");
+
+  // 2. Trigger the action that starts the timer
+  await page.hover("#anchor");
+
+  // 3. Jump forward in time instantly
+  await page.clock.runFor(500);
+
+  // 4. Assert the final state
+  await tooltip.waitFor({ state: "visible" });
+  assert.ok(await tooltip.isVisible(), "Tooltip should be visible after jump");
+});
+
+uiTest("ds-tooltip should NOT show when clicktoopen is enabled", async (page) => {
+  await page.clock.install();
+  await page.mount(`
+    <ds-tooltip clicktoopen delay="500">
+      <button id="anchor">Hover me</button>
+      <div slot="content">Tooltip content</div>
+    </ds-tooltip>
+  `);
+
+  const tooltip = page.locator("ds-tooltip").getByRole("tooltip", { includeHidden: true });
+
+  await page.hover("#anchor");
+
+  // Fast-forward to prove it REMAINS hidden
+  await page.clock.runFor(1000);
+  assert.strictEqual(await tooltip.isVisible(), false);
+});
+```
+
 ## CSS Pseudo-Classes and Custom States
 
 Verify visual states and custom CSS states (like `:state(touched)`).

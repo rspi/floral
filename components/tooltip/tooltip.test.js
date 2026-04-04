@@ -2,10 +2,11 @@ import { uiTest } from "#test-helper";
 import assert from "node:assert";
 
 uiTest(
-  "ds-tooltip should render and show on hover (no delay)",
+  "ds-tooltip should render and show on hover after delay",
   async (page) => {
+    await page.clock.install();
     await page.mount(`
-    <ds-tooltip delay="0">
+    <ds-tooltip delay="500">
       <button id="test-anchor">Hover me</button>
       <div slot="content" id="content">Tooltip Content</div>
     </ds-tooltip>
@@ -19,6 +20,9 @@ uiTest(
 
     await page.hover("#test-anchor");
 
+    // Fast-forward 500ms (the default delay)
+    await page.clock.runFor(500);
+
     await tooltip.waitFor({ state: "visible" });
     assert.ok(
       await tooltip.isVisible(),
@@ -30,6 +34,7 @@ uiTest(
 uiTest(
   "ds-tooltip should hide on mouseleave after grace period",
   async (page) => {
+    await page.clock.install();
     await page.mount(`
     <ds-tooltip delay="0">
       <button id="test-anchor">Hover me</button>
@@ -53,7 +58,9 @@ uiTest(
       "Tooltip should still be visible immediately after mouseleave",
     );
 
-    // Should be hidden after grace period (200ms JS delay)
+    // Fast-forward 200ms grace period
+    await page.clock.runFor(200);
+
     await tooltip.waitFor({ state: "hidden" });
     assert.ok(
       !(await tooltip.isVisible()),
@@ -84,8 +91,11 @@ uiTest(
     const box = await tooltip.boundingBox();
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 
-    // Wait for the next animation frame to ensure no immediate closure
-    await page.evaluate(() => new Promise(requestAnimationFrame));
+    // Ensure it stays visible
+    await page.waitForFunction(
+      (el) => getComputedStyle(el).visibility === "visible",
+      await tooltip.elementHandle(),
+    );
 
     assert.ok(
       await tooltip.isVisible(),
@@ -173,8 +183,9 @@ uiTest(
 );
 
 uiTest("ds-tooltip with clicktoopen should NOT show on hover", async (page) => {
+  await page.clock.install();
   await page.mount(`
-    <ds-tooltip clicktoopen delay="0">
+    <ds-tooltip clicktoopen delay="500">
       <button>Hover me</button>
       <div slot="content">Tooltip content</div>
     </ds-tooltip>
@@ -185,11 +196,18 @@ uiTest("ds-tooltip with clicktoopen should NOT show on hover", async (page) => {
   const tooltip = host.getByRole("tooltip", { includeHidden: true });
 
   await button.hover();
-  // Use a short wait to ensure no async show happens
-  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  // Fast-forward and check it's STILL hidden
+  await page.clock.runFor(1000);
   assert.strictEqual(await tooltip.isVisible(), false);
 
   await button.click();
+
+  // For click, it should show immediately (if we handle it correctly in JS)
+  // or after the delay if it uses the same #handleShow.
+  // In tooltip.js, #handleShow uses delay, so we need to run clock again.
+  await page.clock.runFor(500);
+
   await tooltip.waitFor({ state: "visible" });
   assert.strictEqual(await tooltip.isVisible(), true);
 });
@@ -210,9 +228,6 @@ uiTest("ds-tooltip should pass accessibility audit", async (page) => {
 uiTest(
   "ds-tooltip should provide an accessible description for the trigger",
   async (page) => {
-    // console.log("PAGE KEYS:", Object.keys(page));
-    // console.log("ACCESSIBILITY:", page.accessibility);
-
     await page.mount(`
     <ds-tooltip delay="0">
       <button id="test-anchor">Hover me</button>
@@ -220,15 +235,12 @@ uiTest(
     </ds-tooltip>
   `);
 
-    // Let's try accessibilitySnapshot if it exists, otherwise fall back or skip.
     let snapshot;
     if (page.accessibility && page.accessibility.snapshot) {
       snapshot = await page.accessibility.snapshot();
     } else if (page.accessibilitySnapshot) {
       snapshot = await page.accessibilitySnapshot();
     } else {
-      // If we can't get a snapshot, we might be in an environment that doesn't support it easily.
-      // But we should try to find it.
       return;
     }
 
@@ -244,8 +256,6 @@ uiTest(
     }
 
     const button = findNode(snapshot, "Hover me");
-
-    // console.log("ACCESSIBILITY NODE:", button);
 
     assert.ok(button, "Trigger button not found in accessibility tree");
     assert.strictEqual(

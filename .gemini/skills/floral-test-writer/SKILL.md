@@ -18,7 +18,7 @@ Your goal is to generate resilient, accessible, and performant tests for Web Com
    - Always use `await locator.waitFor({ state: 'visible' })` before performing static assertions.
    - To wait for specific text or attributes, use a locator that includes that condition (e.g., `page.locator('ds-button', { hasText: 'Save' }).waitFor()`).
    - Avoid manual retry loops or `page.waitForFunction()` unless testing complex logic that locators cannot reach.
-6. **No Manual Waiting:** NEVER use `page.waitForTimeout()`. Rely on Playwright's auto-waiting locators and explicit `waitFor` calls.
+6. **No Manual Waiting:** NEVER use `page.waitForTimeout()`. Rely on Playwright's auto-waiting locators and explicit `waitFor` calls. For time-based behaviors (delays, timeouts), use the **Playwright Clock API** (`page.clock.install()`, `page.clock.runFor(ms)`) to jump past timeouts instantly.
 7. **A11y & ARIA:** Verify correct ARIA roles, states (`aria-disabled`, `aria-invalid`), and relationships (`aria-describedby`, `aria-controls`).
    - Use `page.checkA11y()` for general accessibility audits (powered by axe-core).
    - Use `page.accessibilitySnapshot()` (or `page.accessibility.snapshot()`) to verify the actual accessibility tree, especially for cross-Shadow DOM relationships like `ariaDescribedByElements` that do not appear as DOM attributes.

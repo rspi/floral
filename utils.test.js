@@ -1,18 +1,31 @@
 import assert from "node:assert";
 import { uiTest } from "#test-helper";
 
-uiTest("CustomElement should sync attribute to property", async (page) => {
-  await page.evaluate(async () => {
-    const { CustomElement } = await import("/utils.js");
-    if (!customElements.get("ds-test-element-attr")) {
+async function defineElement(page, name, config = {}) {
+  await page.evaluate(
+    async ({ name, config }) => {
+      if (customElements.get(name)) return;
+      const { CustomElement } = await import("/utils.js");
       window.customElements.define(
-        "ds-test-element-attr",
+        name,
         class extends CustomElement {
-          static template = "<div></div>";
-          static meta = { attributes: { "test-attr": [] } };
+          static template = config.template || "<div></div>";
+          static meta = config.meta || {};
+          handleStateChange(n, o, nv) {
+            if (config.trackChanges) {
+              this.lastChange = { name: n, oldValue: o, newValue: nv };
+            }
+          }
         },
       );
-    }
+    },
+    { name, config },
+  );
+}
+
+uiTest("CustomElement should sync attribute to property", async (page) => {
+  await defineElement(page, "ds-test-element-attr", {
+    meta: { attributes: { "test-attr": [] } },
   });
 
   await page.mount(
@@ -24,17 +37,8 @@ uiTest("CustomElement should sync attribute to property", async (page) => {
 });
 
 uiTest("CustomElement should sync property to state", async (page) => {
-  await page.evaluate(async () => {
-    const { CustomElement } = await import("/utils.js");
-    if (!customElements.get("ds-test-element-state")) {
-      window.customElements.define(
-        "ds-test-element-state",
-        class extends CustomElement {
-          static template = "<div></div>";
-          static meta = { attributes: { "test-attr": [] } };
-        },
-      );
-    }
+  await defineElement(page, "ds-test-element-state", {
+    meta: { attributes: { "test-attr": [] } },
   });
 
   await page.mount("<ds-test-element-state></ds-test-element-state>");
@@ -49,17 +53,8 @@ uiTest("CustomElement should sync property to state", async (page) => {
 });
 
 uiTest("CustomElement should handle boolean attributes", async (page) => {
-  await page.evaluate(async () => {
-    const { CustomElement } = await import("/utils.js");
-    if (!customElements.get("ds-test-element-bool")) {
-      window.customElements.define(
-        "ds-test-element-bool",
-        class extends CustomElement {
-          static template = "<div></div>";
-          static meta = { attributes: { "test-bool": [""] } };
-        },
-      );
-    }
+  await defineElement(page, "ds-test-element-bool", {
+    meta: { attributes: { "test-bool": [""] } },
   });
 
   await page.mount("<ds-test-element-bool test-bool></ds-test-element-bool>");
@@ -83,17 +78,8 @@ uiTest("CustomElement should handle boolean attributes", async (page) => {
 });
 
 uiTest("CustomElement should handle enum attributes", async (page) => {
-  await page.evaluate(async () => {
-    const { CustomElement } = await import("/utils.js");
-    if (!customElements.get("ds-test-element-enum")) {
-      window.customElements.define(
-        "ds-test-element-enum",
-        class extends CustomElement {
-          static template = "<div></div>";
-          static meta = { attributes: { "test-enum": ["a", "b"] } };
-        },
-      );
-    }
+  await defineElement(page, "ds-test-element-enum", {
+    meta: { attributes: { "test-enum": ["a", "b"] } },
   });
 
   await page.mount(
@@ -122,17 +108,8 @@ uiTest("CustomElement should handle enum attributes", async (page) => {
 });
 
 uiTest("CustomElement should validate allowed values", async (page) => {
-  await page.evaluate(async () => {
-    const { CustomElement } = await import("/utils.js");
-    if (!customElements.get("ds-test-element-valid")) {
-      window.customElements.define(
-        "ds-test-element-valid",
-        class extends CustomElement {
-          static template = "<div></div>";
-          static meta = { attributes: { "test-enum": ["a", "b"] } };
-        },
-      );
-    }
+  await defineElement(page, "ds-test-element-valid", {
+    meta: { attributes: { "test-enum": ["a", "b"] } },
   });
 
   await page.mount("<ds-test-element-valid></ds-test-element-valid>");
@@ -148,20 +125,9 @@ uiTest("CustomElement should validate allowed values", async (page) => {
 });
 
 uiTest("CustomElement should call handleStateChange", async (page) => {
-  await page.evaluate(async () => {
-    const { CustomElement } = await import("/utils.js");
-    if (!customElements.get("ds-test-element-change")) {
-      window.customElements.define(
-        "ds-test-element-change",
-        class extends CustomElement {
-          static template = "<div></div>";
-          static meta = { attributes: { "test-attr": [] } };
-          handleStateChange(name, oldValue, newValue) {
-            this.lastChange = { name, oldValue, newValue };
-          }
-        },
-      );
-    }
+  await defineElement(page, "ds-test-element-change", {
+    meta: { attributes: { "test-attr": [] } },
+    trackChanges: true,
   });
 
   await page.mount("<ds-test-element-change></ds-test-element-change>");
