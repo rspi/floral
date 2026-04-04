@@ -130,26 +130,25 @@ uiTest("ds-input should expose validity", async (page) => {
 });
 ```
 
-## Internal Focus Delegation
+## Focus Delegation
 
-Verify focus is correctly delegated to internal shadow DOM elements.
+Verify focus is correctly delegated to the component by asserting on the host element's `:focus` state.
 
 ```javascript
-uiTest("ds-button should delegate focus to internal button", async (page) => {
-  await page.mount('<ds-button id="btn">Focus</ds-button>');
-  await page.focus("ds-button");
+uiTest("ds-button should delegate focus", async (page) => {
+  await page.mount('<ds-button id="btn">Focus Me</ds-button>');
+  const host = page.locator("ds-button");
+  await host.focus();
 
+  // Verify the host has focus in the document
   const activeTag = await page.evaluate(() =>
     document.activeElement.tagName.toLowerCase(),
   );
   assert.strictEqual(activeTag, "ds-button");
 
-  const innerFocused = await page.evaluate(() => {
-    return document
-      .getElementById("btn")
-      .shadowRoot.activeElement.tagName.toLowerCase();
-  });
-  assert.strictEqual(innerFocused, "button");
+  // Verify the host element matches the :focus pseudo-class
+  const isFocused = await host.evaluate((el) => el.matches(":focus"));
+  assert.ok(isFocused, "ds-button should match :focus after delegation");
 });
 ```
 
@@ -195,7 +194,7 @@ uiTest(
 
 ## Disabled State (Fieldset Inheritance)
 
-Verify that the component correctly inherits the disabled state from its parent fieldset.
+Verify that the component correctly inherits the disabled state from its parent fieldset using standard Playwright locators.
 
 ```javascript
 uiTest(
@@ -206,11 +205,8 @@ uiTest(
       <ds-button></ds-button>
     </fieldset>
   `);
-    const isDisabled = await page.evaluate(() => {
-      const el = document.querySelector("ds-button");
-      return el.shadowRoot.querySelector("button").disabled;
-    });
-    assert.strictEqual(isDisabled, true);
+    const button = page.locator("ds-button").getByRole("button");
+    assert.strictEqual(await button.isDisabled(), true);
   },
 );
 ```

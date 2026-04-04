@@ -8,7 +8,7 @@
     "#test-helper": "./test-helper.js"
   },
   "scripts": {
-    "test": "node --test --test-timeout=10000 components/**/*.test.js",
+    "test": "node --test --test-timeout=10000 utils.test.js components/**/*.test.js",
     "test:install": "npx playwright-core install chromium",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

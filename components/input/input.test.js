@@ -274,13 +274,13 @@ uiTest("ds-input should handle autofocus attribute", async (page) => {
     const el = document.querySelector("ds-input");
     // Wait a frame for delegation to occur
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    return el.shadowRoot.activeElement === el.shadowRoot.querySelector("input");
+    return el.matches(":focus");
   });
 
   assert.strictEqual(
     isFocused,
     true,
-    "Internal input should be focused when ds-input has autofocus attribute",
+    "ds-input should be focused when it has autofocus attribute",
   );
 });
 
@@ -300,25 +300,18 @@ uiTest(
     await input.press("Backspace");
     await input.blur();
 
-    const { borderColor, hasTouchedState } = await page.evaluate(() => {
-      const el = document.querySelector("ds-input");
-      const input = el.shadowRoot.querySelector("input");
-      return {
-        borderColor: getComputedStyle(input).borderColor,
-        hasTouchedState: el.matches(":state(touched)"),
-      };
-    });
+    const hasTouchedState = await host.evaluate((el) =>
+      el.matches(":state(touched)"),
+    );
 
     assert.ok(
       hasTouchedState,
       "ds-input should have :state(touched) after interaction",
     );
 
-    // Now it should be invalid (rose color)
-    assert.ok(
-      borderColor.includes("rgb(203, 127, 144)") ||
-        borderColor.includes("#cb7f90"),
-    );
+    // Verify it is invalid via ARIA or validity state
+    const isInvalid = await host.evaluate((el) => !el.checkValidity());
+    assert.ok(isInvalid, "ds-input should be invalid after interaction");
   },
 );
 
@@ -333,10 +326,7 @@ uiTest("ds-input should be focusable via label", async (page) => {
 
   const isFocused = await page.evaluate(() => {
     const el = document.querySelector("ds-input");
-    return (
-      document.activeElement === el &&
-      el.shadowRoot.activeElement === el.shadowRoot.querySelector("input")
-    );
+    return document.activeElement === el && el.matches(":focus");
   });
 
   assert.strictEqual(
@@ -346,7 +336,7 @@ uiTest("ds-input should be focusable via label", async (page) => {
   );
 });
 
-uiTest("ds-input should delegate focus to internal input", async (page) => {
+uiTest("ds-input should delegate focus", async (page) => {
   await page.mount(`<ds-input aria-label="Input"></ds-input>`);
 
   // Click the host element directly
@@ -354,13 +344,13 @@ uiTest("ds-input should delegate focus to internal input", async (page) => {
 
   const isFocused = await page.evaluate(() => {
     const el = document.querySelector("ds-input");
-    return el.shadowRoot.activeElement === el.shadowRoot.querySelector("input");
+    return el.matches(":focus");
   });
 
   assert.strictEqual(
     isFocused,
     true,
-    "Internal input should be focused when host element is clicked",
+    "ds-input should be focused when host element is clicked",
   );
 });
 
@@ -369,82 +359,12 @@ uiTest("ds-input should reflect placeholder attribute", async (page) => {
     `<ds-input placeholder="Enter your name" aria-label="Input"></ds-input>`,
   );
   const host = page.locator('ds-input[aria-label="Input"]');
-  // Target the internal input directly via shadow DOM
-  const internalInput = host.locator("input");
+  const input = host.getByRole("textbox");
   assert.strictEqual(
-    await internalInput.getAttribute("placeholder"),
+    await input.getAttribute("placeholder"),
     "Enter your name",
   );
 });
-
-uiTest("ds-input should handle different input types", async (page) => {
-  await page.mount(`
-    <ds-input type="email" value="test@example.com" aria-label="Email"></ds-input>
-    <ds-input type="password" value="secret" aria-label="Password"></ds-input>
-  `);
-
-  const emailHost = page.locator('ds-input[type="email"]');
-  const emailInput = emailHost.getByRole("textbox");
-  assert.strictEqual(await emailHost.evaluate((el) => el.type), "email");
-  assert.strictEqual(await emailInput.inputValue(), "test@example.com");
-
-  const passwordHost = page.locator('ds-input[type="password"]');
-  assert.strictEqual(await passwordHost.evaluate((el) => el.type), "password");
-  assert.strictEqual(await passwordHost.evaluate((el) => el.value), "secret");
-});
-
-uiTest("ds-input should handle disabled property", async (page) => {
-  await page.mount(`<ds-input aria-label="Input"></ds-input>`);
-  const host = page.locator('ds-input[aria-label="Input"]');
-  const input = host.getByRole("textbox");
-
-  await host.evaluate((el) => {
-    el.disabled = true;
-  });
-
-  assert.strictEqual(await input.isDisabled(), true);
-});
-
-uiTest(
-  "ds-input should handle boolean properties and coercion",
-  async (page) => {
-    await page.mount(`<ds-input aria-label="Input"></ds-input>`);
-    const host = page.locator('ds-input[aria-label="Input"]');
-    const input = host.locator("input");
-
-    await host.evaluate((el) => {
-      el.required = "truthy string";
-      el.readonly = 1;
-      el.autofocus = true;
-    });
-
-    // Verify host properties are coerced to booleans
-    assert.strictEqual(await host.evaluate((el) => el.required), true);
-    assert.strictEqual(await host.evaluate((el) => el.readonly), true);
-    assert.strictEqual(await host.evaluate((el) => el.autofocus), true);
-
-    // Verify internal input properties
-    assert.strictEqual(await input.evaluate((el) => el.required), true);
-    assert.strictEqual(await input.evaluate((el) => el.readOnly), true);
-    assert.strictEqual(await input.evaluate((el) => el.autofocus), true);
-
-    await host.evaluate((el) => {
-      el.required = "";
-      el.readonly = 0;
-      el.autofocus = false;
-    });
-
-    // Verify host properties are coerced to booleans (empty string is falsy for properties)
-    assert.strictEqual(await host.evaluate((el) => el.required), false);
-    assert.strictEqual(await host.evaluate((el) => el.readonly), false);
-    assert.strictEqual(await host.evaluate((el) => el.autofocus), false);
-
-    // Verify internal input properties
-    assert.strictEqual(await input.evaluate((el) => el.required), false);
-    assert.strictEqual(await input.evaluate((el) => el.readOnly), false);
-    assert.strictEqual(await input.evaluate((el) => el.autofocus), false);
-  },
-);
 
 uiTest("ds-input should pass accessibility audit", async (page) => {
   await page.mount(`

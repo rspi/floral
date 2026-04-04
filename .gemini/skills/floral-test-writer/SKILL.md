@@ -11,9 +11,9 @@ Your goal is to generate resilient, accessible, and performant tests for Web Com
 ## Core Rules for Floral
 
 1. **Tooling:** Use `playwright-core`, `node:test`, and `node:assert`. Do NOT use `@playwright/test` or `expect`.
-2. **User-Visible Behavior:** Test what the user sees and interacts with. Avoid internal implementation details.
-3. **Resilient Locators:** Prioritize `page.getByRole()`, `page.getByLabel()`, and `page.getByText()`. Use the `name` option in `getByRole` (e.g., `getByRole('button', { name: 'Submit' })`) whenever possible.
-4. **Shadow DOM Piercing:** Playwright locators pierce Shadow DOM by default. Prefer chaining (e.g., `page.locator('ds-button').getByRole('button')`) over raw CSS selectors (`>>`) where it improves readability.
+2. **User-Visible Behavior:** Test what the user sees and interacts with. Avoid internal implementation details. NEVER test the internal Shadow DOM structure (e.g., `shadowRoot.activeElement`, `shadowRoot.querySelector`) unless there is absolutely no behavioral or accessibility-based alternative.
+3. **Resilient Locators:** Prioritize `page.getByRole()`, `page.getByLabel()`, and `page.getByText()`. Use the `name` option in `getByRole` (e.g., `getByRole('button', { name: 'Submit' })`) whenever possible. Rely on Playwright's default Shadow DOM piercing rather than manually querying the shadow root.
+4. **Behavioral Assertions:** Verify states using standard CSS pseudo-classes (e.g., `:focus`, `:disabled`, `:invalid`) and custom states (`:state(touched)`) via `el.matches()`. Use ARIA attributes and roles to verify behavioral outcomes.
 5. **Web-First Assertions (with node:assert):** Since we do not use Playwright's `expect`, you must manually ensure "web-first" behavior (retrying until state is reached) using Playwright's built-in auto-waiting.
    - Always use `await locator.waitFor({ state: 'visible' })` before performing static assertions.
    - To wait for specific text or attributes, use a locator that includes that condition (e.g., `page.locator('ds-button', { hasText: 'Save' }).waitFor()`).
