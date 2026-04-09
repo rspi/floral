@@ -2,18 +2,18 @@
   "name": "floral",
   "version": "0.0.1",
   "description": "Web component based design system",
-  "main": "index.js",
+  "main": "src/index.js",
   "type": "module",
   "imports": {
-    "#test-helper": "./test-helper.js"
+    "#test-helper": "./tools/test-helper.js"
   },
   "scripts": {
-    "test": "node --test --test-timeout=10000 utils.test.js components/**/*.test.js",
+    "test": "node --test --test-timeout=10000 src/**/*.test.js",
     "test:install": "npx playwright-core install chromium",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "git config core.hooksPath .githooks",
-    "start": "node dev-server.js"
+    "start": "node tools/dev-server.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",

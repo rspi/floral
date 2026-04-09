@@ -5,7 +5,7 @@ async function defineElement(page, name, config = {}) {
   await page.evaluate(
     async ({ name, config }) => {
       if (customElements.get(name)) return;
-      const { CustomElement } = await import("/utils.js");
+      const { CustomElement } = await import("/src/utils.js");
       window.customElements.define(
         name,
         class extends CustomElement {

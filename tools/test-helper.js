@@ -39,7 +39,7 @@ async function setup() {
 
   port = await getFreePort();
 
-  server = spawn("node", ["dev-server.js"], {
+  server = spawn("node", ["tools/dev-server.js"], {
     env: { ...process.env, PORT: port },
     stdio: ["ignore", "pipe", "inherit"],
   });

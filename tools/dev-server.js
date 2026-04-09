@@ -24,7 +24,7 @@ const sendReload = () => {
 };
 
 const server = http.createServer((req, res) => {
-  const filePath = req.url === "/" ? "index.html" : `.${req.url}`;
+  const filePath = req.url === "/" ? "docs/index.html" : `.${req.url}`;
   const extname = path.extname(filePath);
   let contentType = "text/html";
 
@@ -44,8 +44,8 @@ const server = http.createServer((req, res) => {
       <html>
         <head>
           <link rel="icon" href="data:;base64,=" />
-          <script type="module" src="./components/index.js"></script>
-          <link rel="stylesheet" href="variables.css" />
+          <script type="module" src="/src/index.js"></script>
+          <link rel="stylesheet" href="/src/variables.css" />
         </head>
         <body></body>
       </html>
@@ -73,7 +73,7 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    if (filePath === "index.html") {
+    if (filePath === "docs/index.html") {
       let contentString = content.toString();
       const userAgent = req.headers["user-agent"];
 
