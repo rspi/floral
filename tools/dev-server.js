@@ -24,7 +24,20 @@ const sendReload = () => {
 };
 
 const server = http.createServer((req, res) => {
-  const filePath = req.url === "/" ? "docs/index.html" : `.${req.url}`;
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = url.pathname;
+
+  if (pathname === "/") {
+    res.writeHead(302, { Location: "/docs/" });
+    res.end();
+    return;
+  }
+
+  let filePath = `.${pathname}`;
+  if (pathname === "/docs" || pathname === "/docs/") {
+    filePath = "./docs/index.html";
+  }
+
   const extname = path.extname(filePath);
   let contentType = "text/html";
 
@@ -37,7 +50,7 @@ const server = http.createServer((req, res) => {
       break;
   }
 
-  if (req.url === "/blank") {
+  if (pathname === "/blank") {
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(`
       <!DOCTYPE html>
@@ -53,7 +66,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.url === "/events") {
+  if (pathname === "/events") {
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
@@ -73,7 +86,7 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    if (filePath === "docs/index.html") {
+    if (extname === ".html") {
       let contentString = content.toString();
       const userAgent = req.headers["user-agent"];
 

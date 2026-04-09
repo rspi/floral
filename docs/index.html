@@ -1,42 +1,23 @@
+<!doctype html>
 <html lang="en">
   <head>
     <link rel="icon" href="data:;base64,=" />
-    <script type="module" src="../src/index.js"></script>
+    <script
+      async
+      src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"
+    ></script>
+    <script type="esms-options">
+      { "polyfillEnable": ["css-modules"] }
+    </script>
     <link rel="stylesheet" href="../src/variables.css" />
-    <style>
-      body {
-        background: var(--ds-color-background);
-        color: var(--ds-color-text);
-        margin-top: 100px;
-        margin-bottom: 1000px;
-      }
-    </style>
+    <script type="module" src="docs.js"></script>
+    <link rel="stylesheet" href="docs.css" />
+    <title>Floral</title>
   </head>
   <body>
-    <ds-tooltip position="left" delay="0">
-      <ds-button variant="primary">primary</ds-button>
-      <div slot="content">hahahaahahahahahaha <b>lalalalalalaalal</b></div>
-    </ds-tooltip>
-    <ds-button variant="negative">negative</ds-button>
-    <ds-button>default</ds-button>
-    <ds-button disabled>disabled</ds-button>
-    <ds-tooltip position="left" delay="0">
-      <ds-input disabled value="Disabled input"></ds-input>
-      <div slot="content">Disabled</div>
-    </ds-tooltip>
-
-    <div
-      style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px"
-    >
-      <form>
-        <ds-input required></ds-input>
-        <input required />
-        <ds-button type="reset">Reset</ds-button>
-        <ds-button variant="primary">Save</ds-button>
-      </form>
-      <ds-input type="password" placeholder="Password"></ds-input>
-      <ds-input value="Pre-filled value"></ds-input>
-      <ds-input disabled value="Disabled input"></ds-input>
-    </div>
+    <docs-shell>
+      <h1>Introduction</h1>
+      <p>Welcome to Floral. A Web Component based design system.</p>
+    </docs-shell>
   </body>
 </html>

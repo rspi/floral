@@ -1,0 +1,62 @@
+.example {
+  border: 1px solid var(--ds-color-surface-3);
+  border-radius: 8px;
+  overflow: hidden;
+
+  .rendered {
+    background: var(--ds-color-surface-2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+
+  pre {
+    background: var(--ds-color-surface-1);
+    padding: 1.5rem;
+    overflow-x: auto;
+    border-top: 1px solid var(--ds-color-surface-3);
+    font-family: monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+}
+
+.metadata {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-xl);
+
+  h2 {
+    margin-bottom: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--ds-space-s);
+    border-bottom: 1px solid var(--ds-color-surface-3);
+  }
+
+  th {
+    color: var(--ds-color-lavender-70);
+    font-weight: bold;
+  }
+
+  code {
+    background: var(--ds-color-surface-2);
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+}
+
+.metadata-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-m);
+}
