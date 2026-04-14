@@ -145,6 +145,31 @@ export const uiTest = (name, fn) => {
         }
       };
 
+      page.getSnapshot = async () => {
+        if (typeof page._snapshotForAI === "function") {
+          const snapshot = await page._snapshotForAI();
+          return {
+            _text: snapshot.full,
+          };
+        }
+        return null;
+      };
+
+      page.findNode = (snapshot, name) => {
+        if (!snapshot || !snapshot._text) return null;
+        const lines = snapshot._text.split("\n");
+        for (const line of lines) {
+          if (line.includes(`"${name}"`)) {
+            const node = { name };
+            // snapshotForAI uses lowercase lowercase [required] [invalid]
+            if (line.includes("[required]")) node.required = true;
+            if (line.includes("[invalid]")) node.invalid = "true";
+            return node;
+          }
+        }
+        return null;
+      };
+
       // Allow the test function to toggle failOnErrors if needed
       page.expectErrors = () => {
         failOnErrors = false;

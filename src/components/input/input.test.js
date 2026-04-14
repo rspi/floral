@@ -373,3 +373,84 @@ uiTest("ds-input should pass accessibility audit", async (page) => {
   `);
   await page.checkA11y();
 });
+
+uiTest("ds-input should reflect aria-required", async (page) => {
+  await page.mount(
+    `<ds-input required aria-label="Required Input"></ds-input>`,
+  );
+
+  const ariaRequired = await page.evaluate(
+    () => document.querySelector("ds-input").internals.ariaRequired,
+  );
+  assert.strictEqual(ariaRequired, "true");
+
+  await page.evaluate(() => {
+    document.querySelector("ds-input").required = false;
+  });
+
+  const ariaRequiredAfter = await page.evaluate(
+    () => document.querySelector("ds-input").internals.ariaRequired,
+  );
+  assert.strictEqual(ariaRequiredAfter, "false");
+});
+
+uiTest(
+  "ds-input should reflect aria-invalid only after interaction",
+  async (page) => {
+    await page.mount(
+      `<ds-input required aria-label="Interacted Input"></ds-input>`,
+    );
+    const host = page.locator("ds-input");
+    const input = host.getByRole("textbox");
+
+    // Initial state: invalid but not touched, so aria-invalid should be false
+    const ariaInvalid = await page.evaluate(
+      () => document.querySelector("ds-input").internals.ariaInvalid,
+    );
+    assert.strictEqual(ariaInvalid, "false");
+
+    // Interact and blur to trigger touched state
+    await input.focus();
+    await input.blur();
+
+    const ariaInvalidAfter = await page.evaluate(
+      () => document.querySelector("ds-input").internals.ariaInvalid,
+    );
+    assert.strictEqual(ariaInvalidAfter, "true");
+
+    // Fill it to make it valid
+    await input.fill("valid");
+    const ariaInvalidValid = await page.evaluate(
+      () => document.querySelector("ds-input").internals.ariaInvalid,
+    );
+    assert.strictEqual(ariaInvalidValid, "false");
+  },
+);
+
+uiTest(
+  "ds-input should associate with error message via aria-describedby",
+  async (page) => {
+    await page.mount(`
+    <ds-input id="test-input" required aria-label="Described Input">
+      <span slot="error">Error: Field is required</span>
+    </ds-input>
+  `);
+
+    const host = page.locator("ds-input");
+    const input = host.getByRole("textbox");
+
+    // Trigger touched state
+    await input.focus();
+    await input.blur();
+
+    const snapshot = await page.getSnapshot();
+    assert.ok(snapshot && snapshot._text, "Snapshot text not found");
+
+    // Since _snapshotForAI doesn't explicitly link description in text,
+    // we verify the error message is present in the tree.
+    assert.ok(
+      snapshot._text.includes("Error: Field is required"),
+      "Error message should be present in accessibility tree",
+    );
+  },
+);

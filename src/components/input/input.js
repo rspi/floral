@@ -1,7 +1,12 @@
 import sheet from "./input.css" with { type: "css" };
 import { CustomElement } from "../../utils.js";
 
-const html = `<input />`;
+const html = `
+  <div class="container">
+    <input />
+    <slot name="error" id="error-slot"></slot>
+  </div>
+`;
 
 window.customElements.define(
   "ds-input",
@@ -23,7 +28,9 @@ window.customElements.define(
         autofocus: [""],
         name: [],
       },
-      slots: {},
+      slots: {
+        error: "Slot for validation error messages.",
+      },
       parts: {},
       cssVariables: {},
     };
@@ -33,11 +40,18 @@ window.customElements.define(
     #initialValueCaptured = false;
 
     #updateValidity() {
+      const isInvalid = !this.#input.checkValidity();
+      const isTouched = this.internals.states.has("touched");
+
       this.internals.setValidity(
         this.#input.validity,
         this.#input.validationMessage,
         this.#input,
       );
+
+      // Only announce invalidity to screen readers if the user has interacted
+      const invalid = isTouched && isInvalid;
+      this.internals.ariaInvalid = invalid ? "true" : "false";
     }
 
     #updateDisabledState(disabled) {
@@ -80,8 +94,11 @@ window.customElements.define(
         this.#updateValidity();
       } else if (name === "placeholder") {
         this.#input.placeholder = newValue || "";
+      } else if (name === "name") {
+        this.#input.ariaLabel = newValue || "input";
       } else if (name === "required") {
         this.#input.required = newValue;
+        this.internals.ariaRequired = newValue ? "true" : "false";
         this.#updateValidity();
       } else if (name === "readonly") {
         this.#input.readOnly = newValue;
@@ -98,6 +115,19 @@ window.customElements.define(
         this.#initialValueCaptured = true;
       }
       this.#updateValidity();
+
+      const errorSlot = this.shadowRoot.getElementById("error-slot");
+      const updateErrorAssociation = () => {
+        const assigned = errorSlot.assignedElements();
+        if (assigned.length > 0) {
+          this.internals.ariaDescribedByElements = assigned;
+        } else {
+          this.internals.ariaDescribedByElements = null;
+        }
+      };
+
+      errorSlot.addEventListener("slotchange", updateErrorAssociation);
+      updateErrorAssociation();
     }
 
     formDisabledCallback(disabled) {
@@ -108,12 +138,12 @@ window.customElements.define(
       this.value = this.#initialValue;
       this.#input.value = this.#initialValue;
       this.internals.setFormValue(this.#initialValue);
+      this.internals.states.delete("touched");
       this.#updateValidity();
     }
     #handleInput = () => {
       this.value = this.#input.value;
       this.internals.setFormValue(this.value);
-      this.internals.states.add("touched");
       this.#updateValidity();
     };
 
@@ -131,11 +161,13 @@ window.customElements.define(
 
     constructor() {
       super();
+      this.internals.role = "textbox";
       this.#input = this.shadowRoot.querySelector("input");
 
       // Add 'touched' state on invalid event (e.g. form submission attempt)
       this.addEventListener("invalid", () => {
         this.internals.states.add("touched");
+        this.#updateValidity();
       });
 
       // default compose: true
@@ -146,6 +178,7 @@ window.customElements.define(
       this.#input.addEventListener("keydown", this.#handleKeyDown);
       this.#input.addEventListener("blur", () => {
         this.internals.states.add("touched");
+        this.#updateValidity();
       });
 
       this.#updateValidity();
