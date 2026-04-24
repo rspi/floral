@@ -91,7 +91,8 @@ class DocsShell extends HTMLElement {
 
     for (const { slug, exists } of previewChecks) {
       if (exists) {
-        const displayName = slug.charAt(0).toUpperCase() + slug.slice(1);
+        const { toDisplayName } = await componentRendererPromise;
+        const displayName = toDisplayName(slug);
 
         const a = document.createElement("a");
         a.href = `./?component=${slug}`;
@@ -137,6 +138,7 @@ class DocsShell extends HTMLElement {
     try {
       let content;
       let title;
+      let element;
 
       if (component) {
         const { renderComponent } = await componentRendererPromise;
@@ -147,7 +149,9 @@ class DocsShell extends HTMLElement {
         );
         content = result.content;
         title = result.title;
+        element = result.element;
       } else if (page) {
+        const { toDisplayName } = await componentRendererPromise;
         fetchUrl = `${page}.html`;
         const response = await fetch(fetchUrl);
         if (!response.ok) throw new Error(`Failed to load ${fetchUrl}`);
@@ -155,7 +159,7 @@ class DocsShell extends HTMLElement {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, "text/html");
         content = doc.body.innerHTML;
-        title = `Floral - ${page.charAt(0).toUpperCase() + page.slice(1)}`;
+        title = `Floral - ${toDisplayName(page)}`;
       } else {
         const response = await fetch(fetchUrl);
         if (!response.ok) throw new Error(`Failed to load ${fetchUrl}`);
@@ -174,7 +178,12 @@ class DocsShell extends HTMLElement {
       }
 
       document.title = title;
-      this.main.innerHTML = content;
+      if (element) {
+        this.main.innerHTML = "";
+        this.main.appendChild(element);
+      } else {
+        this.main.innerHTML = content;
+      }
       this.updateActiveLink(url);
       window.scrollTo(0, 0);
       return true;

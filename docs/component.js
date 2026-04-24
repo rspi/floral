@@ -1,72 +1,18 @@
-function renderMetadata(meta) {
-  if (!meta) return "";
+export function toDisplayName(slug) {
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
+}
 
-  let html = `
-      <section class="metadata">
-        <h2>Metadata</h2>
+function dedent(text) {
+  const lines = text.trim().split("\n");
+  const minIndent = lines.reduce((min, line) => {
+    if (line.trim().length === 0) return min;
+    const match = line.match(/^(\s*)/);
+    return Math.min(min, match[0].length);
+  }, Infinity);
 
-        <div class="metadata-section">
-          <h3>Attributes</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Values</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${Object.entries(meta.attributes || {})
-                .map(
-                  ([name, values]) => `
-              <tr>
-                <td><code>${name}</code></td>
-                <td>${
-                  values
-                    .map((v) =>
-                      v === "" ? "<em>boolean</em>" : `<code>${v}</code>`,
-                    )
-                    .join(", ") || "<em>any</em>"
-                }</td>
-              </tr>
-            `,
-                )
-                .join("")}
-            </tbody>
-          </table>
-        </div>
-
-        ${
-          meta.slots && Object.keys(meta.slots).length > 0
-            ? `
-          <div class="metadata-section">
-            <h3>Slots</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${Object.entries(meta.slots)
-                  .map(
-                    ([name, desc]) => `
-                  <tr>
-                    <td><code>${name}</code></td>
-                    <td>${desc}</td>
-                  </tr>
-                `,
-                  )
-                  .join("")}
-              </tbody>
-            </table>
-          </div>
-        `
-            : ""
-        }
-      </section>
-    `;
-  return html;
+  return lines
+    .map((line) => line.slice(minIndent === Infinity ? 0 : minIndent))
+    .join("\n");
 }
 
 function escapeHtml(unsafe) {
@@ -78,6 +24,114 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
+function renderAttributeValue(name, value, isActive, currentValue) {
+  const isValActive =
+    isActive && (value === "" ? currentValue === "" : currentValue === value);
+  const label = value === "" ? "boolean" : value;
+  const classes = `interactive ${isValActive ? "selected" : ""}`;
+
+  return `<code class="${classes}" data-meta-attr="${name}" data-meta-val="${value}">${label}</code>`;
+}
+
+function renderAttributesTable(attributes, activeAttrs) {
+  if (!attributes || Object.keys(attributes).length === 0) return "";
+
+  const rows = Object.entries(attributes)
+    .map(([name, values]) => {
+      const isActive = Object.prototype.hasOwnProperty.call(activeAttrs, name);
+      const currentValue = activeAttrs[name];
+      const renderedValues =
+        values
+          .map((v) => renderAttributeValue(name, v, isActive, currentValue))
+          .join(", ") || "<code>string</code>";
+
+      return `
+        <tr>
+          <td><code>${name}</code></td>
+          <td>${renderedValues}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  return `
+    <div class="metadata-section">
+      <h3>Attributes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Values</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderSlotsTable(slots) {
+  if (!slots || Object.keys(slots).length === 0) return "";
+
+  const rows = Object.entries(slots)
+    .map(
+      ([name, desc]) => `
+      <tr>
+        <td><code>${name}</code></td>
+        <td>${desc}</td>
+      </tr>
+    `,
+    )
+    .join("");
+
+  return `
+    <div class="metadata-section">
+      <h3>Slots</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getActiveAttributes(element) {
+  return Array.from(element.attributes).reduce((acc, attr) => {
+    acc[attr.name] = attr.value;
+    return acc;
+  }, {});
+}
+
+async function fetchPreviewContent(slug) {
+  const url = `../src/components/${slug}/preview.html`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to load ${url}`);
+  return response.text();
+}
+
+function renderMetadata(meta, componentNode) {
+  if (!meta) return "";
+
+  const activeAttrs = getActiveAttributes(componentNode);
+
+  return `
+    <section class="metadata">
+      <h2>Metadata</h2>
+      ${renderAttributesTable(meta.attributes, activeAttrs)}
+      ${renderSlotsTable(meta.slots)}
+    </section>
+  `;
+}
+
 function highlightHtml(html) {
   return html
     .replace(/(&lt;!--.*?--&gt;)/g, '<span class="code-comment">$1</span>')
@@ -85,69 +139,85 @@ function highlightHtml(html) {
       const highlightedAttributes = p3.replace(
         /(\s)([a-zA-Z0-9-]+)(=(&quot;.*?&quot;|&#039;.*?&#039;|[^\s&]+))?/g,
         (m, s, attr, valPart) => {
-          let res = `${s}<span class="code-attr">${attr}</span>`;
+          let res = `<span class="code-attr">${attr}</span>`;
           if (valPart) {
             const val = valPart.substring(1);
-            // Don't show empty values (e.g., disabled="")
-            if (val === "&quot;&quot;" || val === "&#039;&#039;") {
-              return res;
-            }
+            if (val === "&quot;&quot;" || val === "&#039;&#039;")
+              return s + res;
             res += `=<span class="code-string">${val}</span>`;
           }
-          return res;
+          return s + res;
         },
       );
       return `${p1}<span class="code-tag">${p2}</span>${highlightedAttributes}&gt;`;
     });
 }
 
-export async function renderComponent(slug, meta) {
-  const fetchUrl = `../src/components/${slug}/preview.html`;
-  const response = await fetch(fetchUrl);
-  if (!response.ok) throw new Error(`Failed to load ${fetchUrl}`);
-  const html = await response.text();
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
+function refreshCodePreview(renderedEl, codeEl) {
+  const content = dedent(renderedEl.innerHTML);
+  codeEl.innerHTML = highlightHtml(escapeHtml(content));
+}
 
-  const shellInDoc = doc.querySelector("docs-shell");
-  let content;
-
-  if (shellInDoc) {
-    content = shellInDoc.innerHTML;
+function toggleAttribute(el, attrName, specificValue) {
+  if (el.getAttribute(attrName) === specificValue) {
+    el.removeAttribute(attrName);
   } else {
-    const bodyMain = doc.querySelector("main");
-    content = bodyMain ? bodyMain.innerHTML : doc.body.innerHTML;
+    el.setAttribute(attrName, specificValue);
   }
+}
 
-  // Clean up indentation for the code preview
-  const lines = content.trim().split("\n");
-  const minIndent = lines.reduce((min, line) => {
-    if (line.trim().length === 0) return min;
-    const match = line.match(/^(\s*)/);
-    return Math.min(min, match[0].length);
-  }, Infinity);
+export async function renderComponent(slug, meta) {
+  const content = await fetchPreviewContent(slug);
 
-  const cleanContent = lines
-    .map((line) => line.slice(minIndent === Infinity ? 0 : minIndent))
-    .join("\n");
-
-  const displayName = slug.charAt(0).toUpperCase() + slug.slice(1);
-
-  let finalHtml = `
-    <h1>${displayName}</h1>
+  const container = document.createElement("div");
+  container.innerHTML = `
+    <h1>${toDisplayName(slug)}</h1>
     <section class="example">
       <div class="rendered">
         ${content}
       </div>
 
-      <pre><code>${highlightHtml(escapeHtml(cleanContent))}</code></pre>
+      <pre><code></code></pre>
     </section>
   `;
 
-  finalHtml += renderMetadata(meta);
+  const renderedEl = container.querySelector(".rendered");
+  const codeEl = container.querySelector("code");
+  const primaryComponent = renderedEl.querySelector(`ds-${slug}`);
+
+  const updateUI = () => {
+    refreshCodePreview(renderedEl, codeEl);
+
+    if (!primaryComponent) return;
+
+    const metadataHtml = renderMetadata(meta, primaryComponent);
+    const oldMetadata = container.querySelector(".metadata");
+
+    if (oldMetadata) {
+      oldMetadata.outerHTML = metadataHtml;
+    } else {
+      container.insertAdjacentHTML("beforeend", metadataHtml);
+    }
+  };
+
+  updateUI();
+
+  container.addEventListener("click", (e) => {
+    const interactive = e.target.closest(".interactive");
+    if (!interactive) return;
+
+    const attrName = interactive.dataset.metaAttr;
+    const metaVal = interactive.dataset.metaVal;
+
+    if (attrName && primaryComponent) {
+      toggleAttribute(primaryComponent, attrName, metaVal);
+      updateUI();
+    }
+  });
 
   return {
-    content: finalHtml,
-    title: `Floral - ${slug.charAt(0).toUpperCase() + slug.slice(1)}`,
+    content: container.innerHTML,
+    title: `Floral - ${toDisplayName(slug)}`,
+    element: container,
   };
 }

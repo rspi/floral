@@ -66,6 +66,21 @@
     background: var(--ds-color-surface-2);
     padding: 2px 4px;
     border-radius: 4px;
+    transition: all var(--ds-transition);
+
+    &.interactive {
+      cursor: pointer;
+
+      &:hover:not(.selected) {
+        background: var(--ds-color-surface-4);
+      }
+    }
+
+    &.selected {
+      background: var(--ds-color-surface-4);
+      color: var(--ds-color-lavender-70);
+      box-shadow: 0 0 0 1px var(--ds-color-surface-5);
+    }
   }
 }
 
