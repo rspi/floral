@@ -1,5 +1,7 @@
 # Floral
 
+[![Documentation](https://img.shields.io/badge/docs-Floral-9e7fe0?style=for-the-badge)](https://rspi.github.io/floral/docs/)
+
 Floral is a zero-dependency web-component based design-system using the latest web standards.
 
 The project is a learning experience about the latest web standards and everything involved in building a design system. From picking colors to designing, building and documenting components.
