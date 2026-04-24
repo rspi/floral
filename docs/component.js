@@ -78,6 +78,29 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
+function highlightHtml(html) {
+  return html
+    .replace(/(&lt;!--.*?--&gt;)/g, '<span class="code-comment">$1</span>')
+    .replace(/(&lt;\/?)([a-zA-Z0-9-]+)(.*?)&gt;/g, (match, p1, p2, p3) => {
+      const highlightedAttributes = p3.replace(
+        /(\s)([a-zA-Z0-9-]+)(=(&quot;.*?&quot;|&#039;.*?&#039;|[^\s&]+))?/g,
+        (m, s, attr, valPart) => {
+          let res = `${s}<span class="code-attr">${attr}</span>`;
+          if (valPart) {
+            const val = valPart.substring(1);
+            // Don't show empty values (e.g., disabled="")
+            if (val === "&quot;&quot;" || val === "&#039;&#039;") {
+              return res;
+            }
+            res += `=<span class="code-string">${val}</span>`;
+          }
+          return res;
+        },
+      );
+      return `${p1}<span class="code-tag">${p2}</span>${highlightedAttributes}&gt;`;
+    });
+}
+
 export async function renderComponent(slug, meta) {
   const fetchUrl = `../src/components/${slug}/preview.html`;
   const response = await fetch(fetchUrl);
@@ -117,7 +140,7 @@ export async function renderComponent(slug, meta) {
         ${content}
       </div>
 
-      <pre><code>${escapeHtml(cleanContent)}</code></pre>
+      <pre><code>${highlightHtml(escapeHtml(cleanContent))}</code></pre>
     </section>
   `;
 

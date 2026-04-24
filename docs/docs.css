@@ -80,7 +80,7 @@ aside {
 
 main {
   grid-column: 3 / 4;
-  padding: var(--ds-space-xxl);
+  padding: var(--ds-space-l) var(--ds-space-xxl);
 
   h1,
   h2,

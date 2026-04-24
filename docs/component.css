@@ -19,6 +19,20 @@
     font-family: monospace;
     font-size: 0.9rem;
     line-height: 1.5;
+
+    .code-tag {
+      color: var(--ds-color-lavender-70);
+    }
+    .code-attr {
+      color: var(--ds-color-forgetmenot-70);
+    }
+    .code-string {
+      color: var(--ds-color-mint-70);
+    }
+    .code-comment {
+      color: var(--ds-color-cowslip-70);
+      font-style: italic;
+    }
   }
 }
 
@@ -44,7 +58,7 @@
   }
 
   th {
-    color: var(--ds-color-lavender-70);
+    color: var(--ds-color-forgetmenot-60);
     font-weight: bold;
   }
 
