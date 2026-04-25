@@ -1,4 +1,4 @@
-export const discoveredComponents = new Map();
+const discoveredComponents = new Map();
 const originalDefine = window.customElements.define;
 
 window.customElements.define = function (name, constructor, options) {
@@ -11,6 +11,10 @@ window.customElements.define = function (name, constructor, options) {
 
 const libraryPromise = import("../src/index.js");
 const componentRendererPromise = import("./component.js");
+
+function capitalize(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -34,24 +38,31 @@ template.innerHTML = `
   <main></main>
 `;
 
-async function checkPreviewExists(slug) {
+async function fetchPreviewFragment(slug) {
   try {
-    const response = await fetch(`../src/components/${slug}/preview.html`, {
-      method: "GET",
-    });
-    return response.ok;
+    const response = await fetch(`../src/components/${slug}/preview.html`);
+    return response.ok ? await response.text() : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
+async function fetchStaticPage(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to load ${url}`);
+
+  return response.text();
+}
+
 class DocsShell extends HTMLElement {
+  #initialContent = "";
+
   constructor() {
     super();
   }
 
   connectedCallback() {
-    const initialContent = this.innerHTML;
+    this.#initialContent = this.innerHTML;
 
     this.innerHTML = "";
     this.appendChild(template.content.cloneNode(true));
@@ -62,17 +73,7 @@ class DocsShell extends HTMLElement {
     libraryPromise.then(async () => {
       await this.populateComponents();
       this.setupEventListeners();
-
-      const urlObj = new URL(window.location.href);
-      if (
-        urlObj.searchParams.has("component") ||
-        urlObj.searchParams.has("page")
-      ) {
-        this.loadPage(window.location.href);
-      } else {
-        this.main.innerHTML = initialContent;
-        this.updateActiveLink(window.location.href);
-      }
+      this.loadPage(window.location.href);
     });
   }
 
@@ -82,17 +83,19 @@ class DocsShell extends HTMLElement {
     if (!componentsSection) return;
 
     const slugs = Array.from(discoveredComponents.keys());
-    const previewChecks = await Promise.all(
+    const previewResults = await Promise.all(
       slugs.map(async (slug) => ({
         slug,
-        exists: await checkPreviewExists(slug),
+        fragment: await fetchPreviewFragment(slug),
       })),
     );
 
-    for (const { slug, exists } of previewChecks) {
-      if (exists) {
-        const { toDisplayName } = await componentRendererPromise;
-        const displayName = toDisplayName(slug);
+    for (const { slug, fragment } of previewResults) {
+      if (fragment) {
+        const info = discoveredComponents.get(slug);
+        info.previewContent = fragment;
+
+        const displayName = capitalize(slug);
 
         const a = document.createElement("a");
         a.href = `./?component=${slug}`;
@@ -105,20 +108,13 @@ class DocsShell extends HTMLElement {
   setupEventListeners() {
     this.nav.addEventListener("click", (e) => {
       const link = e.target.closest("a");
-      if (!link) return;
-
-      // Allow default behavior for modifier keys (new tab, etc.)
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (!link || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
       const href = link.getAttribute("href");
       if (href && !href.startsWith("http")) {
         e.preventDefault();
         this.navigate(link.href);
       }
-    });
-
-    window.addEventListener("popstate", () => {
-      this.loadPage(window.location.href);
     });
   }
 
@@ -133,12 +129,10 @@ class DocsShell extends HTMLElement {
     const urlObj = new URL(url, window.location.href);
     const component = urlObj.searchParams.get("component");
     const page = urlObj.searchParams.get("page");
-    let fetchUrl = urlObj.href;
 
     try {
-      let content;
       let title;
-      let element;
+      let node;
 
       if (component) {
         const { renderComponent } = await componentRendererPromise;
@@ -146,45 +140,24 @@ class DocsShell extends HTMLElement {
         const result = await renderComponent(
           component,
           info?.constructor?.meta,
+          info?.previewContent,
         );
-        content = result.content;
         title = result.title;
-        element = result.element;
-      } else if (page) {
-        const { toDisplayName } = await componentRendererPromise;
-        fetchUrl = `${page}.html`;
-        const response = await fetch(fetchUrl);
-        if (!response.ok) throw new Error(`Failed to load ${fetchUrl}`);
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-        content = doc.body.innerHTML;
-        title = `Floral - ${toDisplayName(page)}`;
+        node = result.element;
       } else {
-        const response = await fetch(fetchUrl);
-        if (!response.ok) throw new Error(`Failed to load ${fetchUrl}`);
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
+        const html = page
+          ? await fetchStaticPage(`${page}.html`)
+          : this.#initialContent;
+        title = page ? `Floral - ${capitalize(page)}` : "Floral";
 
-        const shellInDoc = doc.querySelector("docs-shell");
-        if (shellInDoc) {
-          content = shellInDoc.innerHTML;
-        } else {
-          const bodyMain = doc.querySelector("main");
-          content = bodyMain ? bodyMain.innerHTML : doc.body.innerHTML;
-        }
-        title = doc.title || "Floral";
+        const template = document.createElement("template");
+        template.innerHTML = html;
+        node = template.content;
       }
 
       document.title = title;
-      if (element) {
-        this.main.innerHTML = "";
-        this.main.appendChild(element);
-      } else {
-        this.main.innerHTML = content;
-      }
-      this.updateActiveLink(url);
+      this.main.replaceChildren(node);
+      this.syncNav(url);
       window.scrollTo(0, 0);
       return true;
     } catch (err) {
@@ -193,34 +166,19 @@ class DocsShell extends HTMLElement {
     }
   }
 
-  updateActiveLink(url) {
+  syncNav(url) {
     const currentUrl = new URL(url, window.location.href);
-    const currentComponent = currentUrl.searchParams.get("component");
-    const currentPage = currentUrl.searchParams.get("page");
 
     this.nav.querySelectorAll("a").forEach((link) => {
-      const href = link.getAttribute("href");
-      if (!href) return;
-
-      const linkUrl = new URL(href, window.location.href);
-      const linkComponent = linkUrl.searchParams.get("component");
-      const linkPage = linkUrl.searchParams.get("page");
-
-      if (currentComponent || linkComponent || currentPage || linkPage) {
-        link.classList.toggle(
-          "active",
-          (currentComponent === linkComponent && !!linkComponent) ||
-            (currentPage === linkPage && !!linkPage),
-        );
-      } else {
-        // Match static pages by pathname
-        link.classList.toggle(
-          "active",
-          currentUrl.pathname.endsWith(linkUrl.pathname),
-        );
-      }
+      const linkUrl = new URL(link.href, window.location.href);
+      const active = currentUrl.search === linkUrl.search;
+      link.classList.toggle("active", active);
     });
   }
 }
 
 customElements.define("docs-shell", DocsShell);
+
+window.addEventListener("popstate", () => {
+  document.querySelector("docs-shell")?.loadPage(window.location.href);
+});

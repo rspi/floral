@@ -1,5 +1,5 @@
-export function toDisplayName(slug) {
-  return slug.charAt(0).toUpperCase() + slug.slice(1);
+function capitalize(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function dedent(text) {
@@ -111,13 +111,6 @@ function getActiveAttributes(element) {
   }, {});
 }
 
-async function fetchPreviewContent(slug) {
-  const url = `../src/components/${slug}/preview.html`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Failed to load ${url}`);
-  return response.text();
-}
-
 function renderMetadata(meta, componentNode) {
   if (!meta) return "";
 
@@ -166,12 +159,10 @@ function toggleAttribute(el, attrName, specificValue) {
   }
 }
 
-export async function renderComponent(slug, meta) {
-  const content = await fetchPreviewContent(slug);
-
+export async function renderComponent(slug, meta, content) {
   const container = document.createElement("div");
   container.innerHTML = `
-    <h1>${toDisplayName(slug)}</h1>
+    <h1>${capitalize(slug)}</h1>
     <section class="example">
       <div class="rendered">
         ${content}
@@ -185,7 +176,7 @@ export async function renderComponent(slug, meta) {
   const codeEl = container.querySelector("code");
   const primaryComponent = renderedEl.querySelector(`ds-${slug}`);
 
-  const updateUI = () => {
+  const syncDocumentation = () => {
     refreshCodePreview(renderedEl, codeEl);
 
     if (!primaryComponent) return;
@@ -200,7 +191,7 @@ export async function renderComponent(slug, meta) {
     }
   };
 
-  updateUI();
+  syncDocumentation();
 
   container.addEventListener("click", (e) => {
     const interactive = e.target.closest(".interactive");
@@ -211,13 +202,12 @@ export async function renderComponent(slug, meta) {
 
     if (attrName && primaryComponent) {
       toggleAttribute(primaryComponent, attrName, metaVal);
-      updateUI();
+      syncDocumentation();
     }
   });
 
   return {
-    content: container.innerHTML,
-    title: `Floral - ${toDisplayName(slug)}`,
+    title: `Floral - ${capitalize(slug)}`,
     element: container,
   };
 }
