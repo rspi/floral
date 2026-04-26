@@ -16,6 +16,109 @@ function capitalize(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+const flowerSvg = `
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 100 100"
+          width="83px"
+          height="83px"
+        >
+          <defs>
+            <style>
+              .line-art {
+                fill: none;
+                stroke-width: 4;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+
+                stroke-dasharray: 150;
+                stroke-dashoffset: 150;
+                animation: draw 2s ease-in-out forwards;
+              }
+
+              .flower {
+                stroke: var(--ds-color-lavender-70);
+              }
+              .stem {
+                stroke: var(--ds-color-mint-70);
+              }
+
+              /* Sequential Animation Delays for bottom-up growth */
+              /* First, the stem grows up from the bottom */
+              .stem {
+                animation-delay: 0.1s;
+              }
+              /* Then the lower leaf grows from the stem */
+              .leaf-left {
+                animation-delay: 0.7s;
+              }
+              /* Then the upper leaf grows from the stem */
+              .leaf-right {
+                animation-delay: 1.3s;
+              }
+              /* Finally, the flower petals bloom from the top */
+              .petal-center {
+                animation-delay: 1.9s;
+              }
+              .petal-left {
+                animation-delay: 2.2s;
+              }
+              .petal-right {
+                animation-delay: 2.5s;
+              }
+
+              @keyframes draw {
+                to {
+                  stroke-dashoffset: 0;
+                }
+              }
+
+              /* Continuous Swaying Animation */
+              .flower-group {
+                transform-origin: 50px 95px;
+                animation: sway 6s ease-in-out infinite;
+              }
+
+              @keyframes sway {
+                0%,
+                100% {
+                  transform: rotate(-2deg);
+                }
+                50% {
+                  transform: rotate(3deg);
+                }
+              }
+            </style>
+          </defs>
+
+          <g class="flower-group">
+            <path class="line-art stem" d="M 52 95 Q 45 75 50 50" />
+            <path
+              class="line-art stem leaf-left"
+              d="M 49 78 Q 35 75 28 65 Q 35 65 47 72"
+            />
+            <path
+              class="line-art stem leaf-right"
+              d="M 48 67 Q 65 65 75 52 Q 65 50 49 60"
+            />
+            <path
+              class="line-art flower petal-center"
+              d="M 50 50 Q 38 25 50 10 Q 62 25 50 50"
+            />
+            <path
+              class="line-art flower petal-left"
+              d="M 50 50 Q 20 40 30 15 Q 38 28 43 31.5"
+            />
+            <path
+              class="line-art flower petal-right"
+              d="M 50 50 Q 80 40 70 15 Q 62 28 57 31.5"
+            />
+          </g>
+        </svg>
+
+
+`;
+
 const template = document.createElement("template");
 template.innerHTML = `
   <aside>
@@ -36,6 +139,7 @@ template.innerHTML = `
     </div>
   </aside>
   <main></main>
+  ${flowerSvg}
 `;
 
 async function fetchPreviewFragment(slug) {
