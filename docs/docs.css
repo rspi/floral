@@ -78,6 +78,30 @@ aside {
   }
 }
 
+.hero {
+  padding: var(--ds-space-xxl) 0;
+  max-width: 800px;
+  margin: 0 auto;
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: var(--ds-space-l);
+    color: var(--ds-color-text);
+
+    &::first-line {
+      color: var(--ds-color-lavender-70);
+    }
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: #b8b3c2;
+    line-height: 1.6;
+  }
+}
+
 main {
   grid-column: 3 / 4;
   padding: var(--ds-space-l) var(--ds-space-xxl);
