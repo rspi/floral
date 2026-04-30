@@ -20,8 +20,6 @@ const flowerSvg = `
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 100 100"
-          width="83px"
-          height="83px"
         >
           <defs>
             <style>
@@ -43,20 +41,15 @@ const flowerSvg = `
                 stroke: var(--ds-color-mint-70);
               }
 
-              /* Sequential Animation Delays for bottom-up growth */
-              /* First, the stem grows up from the bottom */
               .stem {
                 animation-delay: 0.1s;
               }
-              /* Then the lower leaf grows from the stem */
               .leaf-left {
                 animation-delay: 0.7s;
               }
-              /* Then the upper leaf grows from the stem */
               .leaf-right {
                 animation-delay: 1.3s;
               }
-              /* Finally, the flower petals bloom from the top */
               .petal-center {
                 animation-delay: 1.9s;
               }
@@ -73,7 +66,6 @@ const flowerSvg = `
                 }
               }
 
-              /* Continuous Swaying Animation */
               .flower-group {
                 transform-origin: 50px 95px;
                 animation: sway 6s ease-in-out infinite;
@@ -115,8 +107,6 @@ const flowerSvg = `
             />
           </g>
         </svg>
-
-
 `;
 
 const template = document.createElement("template");
