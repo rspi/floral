@@ -3,7 +3,7 @@
 
 body {
   background: var(--ds-color-background);
-  color: #f2eef5;
+  color: var(--ds-color-text);
   font-family: sans-serif;
 }
 
@@ -57,7 +57,7 @@ aside {
       font-size: 14px;
       text-decoration: none;
       padding: var(--ds-space-s) 0;
-      color: #b8b3c2;
+      color: var(--ds-color-text-dark);
       transition: color var(--ds-transition);
 
       &.active {
@@ -65,7 +65,7 @@ aside {
       }
 
       &:hover:not(.active) {
-        color: #f2eef5;
+        color: var(--ds-color-text);
       }
     }
 
@@ -97,7 +97,7 @@ aside {
 
   p {
     font-size: 1.1rem;
-    color: #b8b3c2;
+    color: var(--ds-color-text-dark);
     line-height: 1.6;
   }
 }

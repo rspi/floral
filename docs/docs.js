@@ -119,7 +119,7 @@ template.innerHTML = `
       </div>
       <nav>
         <section>
-          <h2>Introduction</h2>
+          <h2>Foundations</h2>
           <a href="./?page=colors">Colors</a>
         </section>
         <section class="components">
