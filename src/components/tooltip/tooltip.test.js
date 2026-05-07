@@ -225,6 +225,28 @@ uiTest("ds-tooltip should pass accessibility audit", async (page) => {
   await page.checkA11y();
 });
 
+async function assertAccessibleDescription(page, selector, expected) {
+  const client = await page.context().newCDPSession(page);
+
+  let lastDescription;
+  for (let i = 0; i < 20; i++) {
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+    const name = await page.locator(selector).textContent();
+    const axNode = nodes.find(
+      (n) => n.role?.value === "button" && n.name?.value === name.trim(),
+    );
+    lastDescription = axNode?.description?.value;
+    if (lastDescription === expected) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
+  assert.strictEqual(
+    lastDescription,
+    expected,
+    `Expected accessible description "${expected}", but got "${lastDescription}"`,
+  );
+}
+
 uiTest(
   "ds-tooltip should provide an accessible description for the trigger",
   async (page) => {
@@ -235,33 +257,27 @@ uiTest(
     </ds-tooltip>
   `);
 
-    let snapshot;
-    if (page.accessibility && page.accessibility.snapshot) {
-      snapshot = await page.accessibility.snapshot();
-    } else if (page.accessibilitySnapshot) {
-      snapshot = await page.accessibilitySnapshot();
-    } else {
-      return;
-    }
+    await assertAccessibleDescription(page, "#test-anchor", "Tooltip Content");
+  },
+);
 
-    function findNode(node, name) {
-      if (node.name === name) return node;
-      if (node.children) {
-        for (const child of node.children) {
-          const found = findNode(child, name);
-          if (found) return found;
-        }
-      }
-      return null;
-    }
+uiTest(
+  "ds-tooltip should update the accessible description when content changes",
+  async (page) => {
+    await page.mount(`
+    <ds-tooltip delay="0">
+      <button id="test-anchor">Hover me</button>
+      <div slot="content" id="content">Initial Content</div>
+    </ds-tooltip>
+  `);
 
-    const button = findNode(snapshot, "Hover me");
+    await assertAccessibleDescription(page, "#test-anchor", "Initial Content");
 
-    assert.ok(button, "Trigger button not found in accessibility tree");
-    assert.strictEqual(
-      button.description,
-      "Tooltip Content",
-      `Trigger button should have tooltip content as description. Got: "${button.description}"`,
-    );
+    // Update content
+    await page.evaluate(() => {
+      document.getElementById("content").textContent = "Updated Content";
+    });
+
+    await assertAccessibleDescription(page, "#test-anchor", "Updated Content");
   },
 );

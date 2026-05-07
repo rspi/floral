@@ -65,12 +65,25 @@ window.customElements.define(
     #hideTimeout;
     #hostController;
     #positionController;
+    #observer;
+    #trigger;
+    #defaultSlot;
+    #contentSlot;
 
     static FALLBACK_MAP = {
       top: ["bottom", "right", "left"],
       bottom: ["top", "right", "left"],
       left: ["right", "top", "bottom"],
       right: ["left", "top", "bottom"],
+    };
+
+    #updateDescription = () => {
+      const nodes = this.#contentSlot.assignedNodes({ flatten: true });
+      const text = nodes
+        .map((n) => n.textContent)
+        .join(" ")
+        .trim();
+      this.internals.ariaLabel = text;
     };
 
     #handleShow = () => {
@@ -141,12 +154,37 @@ window.customElements.define(
     };
 
     #handleSlotChange = () => {
-      const slot = this.shadowRoot.querySelector("slot:not([name])");
-      const assigned = slot.assignedElements();
+      const assigned = this.#defaultSlot.assignedElements();
       const trigger = assigned.find((el) => el.nodeType === Node.ELEMENT_NODE);
-      if (trigger && "ariaDescribedByElements" in trigger) {
-        trigger.ariaDescribedByElements = [this.#tooltip];
+
+      if (this.#trigger && "ariaDescribedByElements" in this.#trigger) {
+        this.#trigger.ariaDescribedByElements = [];
       }
+
+      this.#trigger = trigger;
+
+      if (trigger && "ariaDescribedByElements" in trigger) {
+        trigger.ariaDescribedByElements = [this];
+      }
+
+      this.#updateDescription();
+
+      this.#observer?.disconnect();
+      this.#observer = new MutationObserver(this.#updateDescription);
+
+      const assignedNodes = this.#contentSlot.assignedNodes();
+
+      for (const node of assignedNodes) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          this.#observer.observe(node, {
+            childList: true,
+            characterData: true,
+            subtree: true,
+          });
+        }
+      }
+
+      this.#observer.observe(this.#contentSlot, { childList: true });
     };
 
     #setupListeners() {
@@ -207,16 +245,23 @@ window.customElements.define(
     disconnectedCallback() {
       this.#hostController?.abort();
       this.#positionController?.abort();
+      this.#observer?.disconnect();
+      if (this.#trigger && "ariaDescribedByElements" in this.#trigger) {
+        this.#trigger.ariaDescribedByElements = [];
+      }
     }
 
     constructor() {
       super();
+      this.internals.role = "tooltip";
       this.#anchor = this.shadowRoot.getElementById("anchor");
       this.#tooltip = this.shadowRoot.getElementById("tooltip");
       this.#arrow = this.shadowRoot.getElementById("arrow");
+      this.#defaultSlot = this.shadowRoot.querySelector("slot:not([name])");
+      this.#contentSlot = this.shadowRoot.querySelector('slot[name="content"]');
 
-      const slot = this.shadowRoot.querySelector("slot:not([name])");
-      slot.addEventListener("slotchange", this.#handleSlotChange);
+      this.#defaultSlot.addEventListener("slotchange", this.#handleSlotChange);
+      this.#contentSlot.addEventListener("slotchange", this.#handleSlotChange);
     }
   },
 );
