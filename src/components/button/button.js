@@ -23,6 +23,7 @@ window.customElements.define(
         variant: ["default", "primary", "negative"],
         type: ["submit", "reset", "button"],
         value: [],
+        "aria-label": [],
       },
       slots: {
         default: "The button content.",
@@ -38,16 +39,21 @@ window.customElements.define(
     #updateDisabledState(disabled) {
       if (disabled) {
         this.#button.setAttribute("disabled", "");
-        this.internals.ariaDisabled = "true";
       } else {
         this.#button.removeAttribute("disabled");
-        this.internals.ariaDisabled = "false";
       }
     }
 
     handleStateChange(name, oldValue, newValue) {
       if (name === "disabled") {
         this.#updateDisabledState(newValue);
+      }
+      if (name === "aria-label") {
+        if (newValue) {
+          this.#button.setAttribute("aria-label", newValue);
+        } else {
+          this.#button.removeAttribute("aria-label");
+        }
       }
     }
 
@@ -83,7 +89,6 @@ window.customElements.define(
 
     constructor() {
       super();
-      this.internals.role = "button";
       this.#button = this.shadowRoot.querySelector("button");
 
       // default compose: true

@@ -22,6 +22,7 @@ window.customElements.define(
         readonly: [""],
         autofocus: [""],
         name: [],
+        "aria-label": [],
       },
       slots: {},
       parts: {},
@@ -43,10 +44,8 @@ window.customElements.define(
     #updateDisabledState(disabled) {
       if (disabled) {
         this.#input.setAttribute("disabled", "");
-        this.internals.ariaDisabled = "true";
       } else {
         this.#input.removeAttribute("disabled");
-        this.internals.ariaDisabled = "false";
       }
     }
 
@@ -89,6 +88,12 @@ window.customElements.define(
         this.#input.autofocus = newValue;
       } else if (name === "disabled") {
         this.#updateDisabledState(newValue);
+      } else if (name === "aria-label") {
+        if (newValue) {
+          this.#input.setAttribute("aria-label", newValue);
+        } else {
+          this.#input.removeAttribute("aria-label");
+        }
       }
     }
 
