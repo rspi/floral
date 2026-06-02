@@ -40,7 +40,7 @@ async function setup() {
   port = await getFreePort();
 
   server = spawn("node", ["tools/dev-server.js"], {
-    env: { ...process.env, PORT: port },
+    env: { ...process.env, PORT: port, NODE_ENV: "test" },
     stdio: ["ignore", "pipe", "inherit"],
   });
 
@@ -51,9 +51,16 @@ async function setup() {
       () => reject(new Error("Server start timeout")),
       5000,
     );
+
+    const onExit = (code) => {
+      clearTimeout(timeout);
+      reject(new Error(`Server exited unexpectedly with code ${code}`));
+    };
+
     server.stdout.on("data", function onData(data) {
       if (data.toString().includes("Server running")) {
         server.stdout.off("data", onData);
+        server.off("exit", onExit);
         clearTimeout(timeout);
         resolve();
       }
@@ -62,6 +69,7 @@ async function setup() {
       clearTimeout(timeout);
       reject(err);
     });
+    server.on("exit", onExit);
   });
 
   try {

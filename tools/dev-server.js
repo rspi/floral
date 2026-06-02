@@ -5,15 +5,17 @@ import path from "node:path";
 const PORT = process.env.PORT || 4711;
 const clients = [];
 
-const watchFiles = (dir) => {
-  fs.watch(dir, { recursive: true }, (eventType, filename) => {
-    if (filename) {
-      const ext = path.extname(filename);
-      if ([".html", ".css", ".js"].includes(ext)) {
-        console.log(`File changed: ${filename}`);
-        sendReload();
+const watchFiles = (dirs) => {
+  dirs.forEach((dir) => {
+    fs.watch(dir, { recursive: true }, (eventType, filename) => {
+      if (filename) {
+        const ext = path.extname(filename);
+        if ([".html", ".css", ".js"].includes(ext)) {
+          console.log(`File changed: ${filename}`);
+          sendReload();
+        }
       }
-    }
+    });
   });
 };
 
@@ -120,7 +122,9 @@ const server = http.createServer((req, res) => {
   });
 });
 
-watchFiles("./");
+if (process.env.NODE_ENV !== "test") {
+  watchFiles(["./src", "./docs"]);
+}
 
 server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
