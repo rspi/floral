@@ -308,3 +308,43 @@ uiTest("ds-button should pass accessibility audit", async (page) => {
   await page.mount("<ds-button>Accessible Button</ds-button>");
   await page.checkA11y();
 });
+
+async function assertAccessibleName(page, expectedRole, expectedName) {
+  const client = await page.context().newCDPSession(page);
+
+  let lastName;
+  const targetExpected = expectedName ?? "";
+  for (let i = 0; i < 20; i++) {
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+    const axNode = nodes.find((n) => n.role?.value === expectedRole);
+    lastName = axNode?.name?.value ?? "";
+    if (lastName === targetExpected) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
+  assert.strictEqual(
+    lastName,
+    targetExpected,
+    `Expected accessible name for role "${expectedRole}" to be "${targetExpected}", but got "${lastName}"`,
+  );
+}
+
+uiTest(
+  "ds-button should dynamically sync aria-label in browser AXTree",
+  async (page) => {
+    await page.mount('<ds-button aria-label="Click Me Button"></ds-button>');
+    await assertAccessibleName(page, "button", "Click Me Button");
+
+    // Dynamically update the attribute
+    await page.locator("ds-button").evaluate((el) => {
+      el.setAttribute("aria-label", "Submit Form");
+    });
+    await assertAccessibleName(page, "button", "Submit Form");
+
+    // Dynamically remove the attribute
+    await page.locator("ds-button").evaluate((el) => {
+      el.removeAttribute("aria-label");
+    });
+    await assertAccessibleName(page, "button", undefined);
+  },
+);

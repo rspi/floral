@@ -112,3 +112,43 @@ uiTest("ds-switch should be disabled in a disabled fieldset", async (page) => {
   const sw = page.getByRole("switch", { name: "Switch" });
   assert.strictEqual(await sw.isDisabled(), true);
 });
+
+async function assertAccessibleName(page, expectedRole, expectedName) {
+  const client = await page.context().newCDPSession(page);
+
+  let lastName;
+  const targetExpected = expectedName ?? "";
+  for (let i = 0; i < 20; i++) {
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+    const axNode = nodes.find((n) => n.role?.value === expectedRole);
+    lastName = axNode?.name?.value ?? "";
+    if (lastName === targetExpected) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+
+  assert.strictEqual(
+    lastName,
+    targetExpected,
+    `Expected accessible name for role "${expectedRole}" to be "${targetExpected}", but got "${lastName}"`,
+  );
+}
+
+uiTest(
+  "ds-switch should dynamically sync aria-label in browser AXTree",
+  async (page) => {
+    await page.mount('<ds-switch aria-label="Dark mode toggle"></ds-switch>');
+    await assertAccessibleName(page, "switch", "Dark mode toggle");
+
+    // Dynamically update the attribute
+    await page.locator("ds-switch").evaluate((el) => {
+      el.setAttribute("aria-label", "Light mode toggle");
+    });
+    await assertAccessibleName(page, "switch", "Light mode toggle");
+
+    // Dynamically remove the attribute
+    await page.locator("ds-switch").evaluate((el) => {
+      el.removeAttribute("aria-label");
+    });
+    await assertAccessibleName(page, "switch", undefined);
+  },
+);
