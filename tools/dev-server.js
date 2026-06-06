@@ -1,6 +1,7 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import { exec } from "node:child_process";
 
 const PORT = process.env.PORT || 4711;
 const clients = [];
@@ -128,4 +129,13 @@ if (process.env.NODE_ENV !== "test") {
 
 server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
+  console.log(`Press Enter to open in browser.`);
+
+  process.stdin.setEncoding("utf8");
+  process.stdin.on("data", (chunk) => {
+    if (chunk === "\n" || chunk === "\r" || chunk === "\r\n") {
+      const startCmd = process.platform === "darwin" ? "open" : "xdg-open";
+      exec(`${startCmd} http://localhost:${PORT}/`);
+    }
+  });
 });
