@@ -120,7 +120,11 @@ template.innerHTML = `
       <nav>
         <section>
           <h2>Foundations</h2>
-          <a href="./?page=colors">Colors</a>
+          <a href="./?page=foundations/colors">Colors</a>
+        </section>
+        <section>
+          <h2>Examples</h2>
+          <a href="./?page=examples/form">Form</a>
         </section>
         <section class="components">
           <h2>Components</h2>

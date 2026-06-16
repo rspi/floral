@@ -1,0 +1,126 @@
+<style>
+  .example-description {
+    margin-bottom: var(--ds-space-xl);
+    color: var(--ds-color-text-dark);
+    line-height: 1.6;
+  }
+
+  .example-form {
+    background: var(--ds-color-surface-1);
+    padding: var(--ds-space-xl);
+    border: 1px solid var(--ds-color-surface-3);
+    border-radius: 8px;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-xl);
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: var(--ds-space-xs);
+      font-size: 14px;
+    }
+
+    .toggle-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--ds-space-l);
+      background: var(--ds-color-surface-2);
+      padding: var(--ds-space-m);
+      border-radius: 6px;
+
+      label {
+        margin-bottom: 0;
+      }
+
+      .description {
+        color: var(--ds-color-text-dark);
+        font-size: 12px;
+        display: block;
+        margin-top: 2px;
+      }
+    }
+
+    ds-button {
+      width: 100%;
+      margin-top: var(--ds-space-m);
+    }
+  }
+</style>
+
+<h1>Form Example</h1>
+<p class="example-description">
+  This example demonstrates how Floral's form-associated custom elements
+  natively integrate with standard HTML forms. Standard HTML validation (like
+  <code>required</code>) is honored, and form data is serialized automatically
+  using the native <code>FormData</code> API.
+</p>
+
+<section>
+  <form
+    onsubmit="
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(this).entries());
+      alert(
+        'Form Submitted Successfully!\n\nCaptured Data:\n' +
+          JSON.stringify(data, null, 2),
+      );
+    "
+    class="example-form"
+  >
+    <div>
+      <label for="form-name">Full Name</label>
+      <ds-input
+        id="form-name"
+        name="name"
+        required
+        placeholder="Enter your full name"
+        autofocus
+      ></ds-input>
+    </div>
+
+    <div>
+      <label for="form-email">Email Address</label>
+      <ds-input
+        id="form-email"
+        type="email"
+        name="email"
+        required
+        placeholder="name@example.com"
+      ></ds-input>
+    </div>
+
+    <div class="toggle-section">
+      <div>
+        <label for="form-marketing">Subscribe to newsletter</label>
+        <span class="description"
+          >Get the latest updates on Floral developments.</span
+        >
+      </div>
+      <ds-switch
+        id="form-marketing"
+        name="marketing"
+        value="subscribed"
+      ></ds-switch>
+    </div>
+
+    <div class="toggle-section">
+      <div>
+        <label for="form-terms">I agree to the Terms of Service</label>
+        <span class="description">You must accept the terms to proceed.</span>
+      </div>
+      <ds-switch
+        id="form-terms"
+        name="terms"
+        required
+        value="accepted"
+      ></ds-switch>
+    </div>
+
+    <div>
+      <ds-button type="submit">Register Account</ds-button>
+    </div>
+  </form>
+</section>
