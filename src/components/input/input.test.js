@@ -373,3 +373,74 @@ uiTest("ds-input should pass accessibility audit", async (page) => {
   `);
   await page.checkA11y();
 });
+
+uiTest(
+  "ds-input should synchronize the 'aria-invalid' attribute on validation changes",
+  async (page) => {
+    await page.mount(`<ds-input required aria-label="Input"></ds-input>`);
+    const input = page.getByRole("textbox");
+
+    // Initially required and empty -> should be invalid -> aria-invalid="true"
+    assert.strictEqual(await input.getAttribute("aria-invalid"), "true");
+
+    // Fill the input -> should be valid -> aria-invalid should be removed
+    await input.fill("valid value");
+    assert.strictEqual(await input.getAttribute("aria-invalid"), null);
+
+    // Empty it again -> should be invalid -> aria-invalid="true"
+    await input.fill("");
+    assert.strictEqual(await input.getAttribute("aria-invalid"), "true");
+  },
+);
+
+uiTest(
+  "ds-input should dynamically synchronize associated Light-DOM labels to the inner input's aria-label",
+  async (page) => {
+    await page.mount(`
+      <label id="lbl1" for="labeled-input">First Label</label>
+      <ds-input id="labeled-input"></ds-input>
+      <label id="lbl2" for="labeled-input">Second Label</label>
+    `);
+    const host = page.locator("#labeled-input");
+
+    // Ensure focus triggers label syncing
+    await host.focus();
+
+    // Verify both labels are concatenated and computed as the accessible name via getByRole
+    const textbox = page.getByRole("textbox", {
+      name: "First Label Second Label",
+    });
+    await textbox.waitFor({ state: "visible" });
+    assert.ok(await textbox.isVisible());
+  },
+);
+
+uiTest(
+  "ds-input should have the correct computed name in the browser's raw Accessibility Tree (AXTree)",
+  async (page) => {
+    await page.mount(`
+      <label for="cax-input">Billing Address</label>
+      <ds-input id="cax-input"></ds-input>
+    `);
+    const host = page.locator("#cax-input");
+
+    // Focus to trigger label synchronization
+    await host.focus();
+
+    // Create a CDP Session
+    const client = await page.context().newCDPSession(page);
+
+    // Request the raw accessibility tree
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    // Find the node that corresponds to the input element (role: "textbox")
+    const textboxNode = nodes.find((n) => n.role?.value === "textbox");
+
+    assert.ok(textboxNode, "Textbox node not found in browser AXTree");
+    assert.strictEqual(
+      textboxNode.name?.value,
+      "Billing Address",
+      "Browser computed an incorrect accessible name in the AXTree",
+    );
+  },
+);

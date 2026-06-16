@@ -34,11 +34,30 @@ window.customElements.define(
     #initialValueCaptured = false;
 
     #updateValidity() {
+      const isValid = this.#input.checkValidity();
       this.internals.setValidity(
         this.#input.validity,
         this.#input.validationMessage,
         this.#input,
       );
+      if (isValid) {
+        this.#input.removeAttribute("aria-invalid");
+      } else {
+        this.#input.setAttribute("aria-invalid", "true");
+      }
+    }
+
+    #syncAssociatedLabels() {
+      if (this.hasAttribute("aria-label")) return;
+
+      if (this.internals.labels && this.internals.labels.length > 0) {
+        const labelText = Array.from(this.internals.labels)
+          .map((label) => label.textContent.trim())
+          .join(" ");
+        this.#input.setAttribute("aria-label", labelText);
+      } else {
+        this.#input.removeAttribute("aria-label");
+      }
     }
 
     #updateDisabledState(disabled) {
@@ -103,6 +122,7 @@ window.customElements.define(
         this.#initialValueCaptured = true;
       }
       this.#updateValidity();
+      this.#syncAssociatedLabels();
     }
 
     formDisabledCallback(disabled) {
@@ -151,6 +171,10 @@ window.customElements.define(
       this.#input.addEventListener("keydown", this.#handleKeyDown);
       this.#input.addEventListener("blur", () => {
         this.internals.states.add("touched");
+      });
+
+      this.addEventListener("focusin", () => {
+        this.#syncAssociatedLabels();
       });
 
       this.#updateValidity();
