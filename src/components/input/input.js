@@ -89,11 +89,7 @@ window.customElements.define(
       } else if (name === "disabled") {
         this.#updateDisabledState(newValue);
       } else if (name === "aria-label") {
-        if (newValue) {
-          this.#input.setAttribute("aria-label", newValue);
-        } else {
-          this.#input.removeAttribute("aria-label");
-        }
+        // Do not set aria-label on inner input to avoid duplication since host already has it
       }
     }
 
@@ -136,6 +132,7 @@ window.customElements.define(
 
     constructor() {
       super();
+      this.internals.role = "none";
       this.#input = this.shadowRoot.querySelector("input");
 
       // Add 'touched' state on invalid event (e.g. form submission attempt)
