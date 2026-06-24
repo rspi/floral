@@ -373,3 +373,48 @@ uiTest("ds-input should pass accessibility audit", async (page) => {
   `);
   await page.checkA11y();
 });
+
+uiTest(
+  "ds-input should not expose duplicate accessible names (double announcement)",
+  async (page) => {
+    await page.mount(`<ds-input aria-label="Username"></ds-input>`);
+
+    const input = page.locator("ds-input").getByRole("textbox");
+    await input.waitFor({ state: "visible" });
+
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    const usernameNodes = nodes.filter((n) => n.name?.value === "Username");
+
+    assert.strictEqual(
+      usernameNodes.length,
+      1,
+      `Double announcement detected: Expected 'Username' to appear 1 time in the a11y tree, but found ${usernameNodes.length} times.`,
+    );
+  },
+);
+
+uiTest(
+  "ds-input should not expose duplicate accessible names when using external label",
+  async (page) => {
+    await page.mount(`
+      <label for="my-input">Email</label>
+      <ds-input id="my-input"></ds-input>
+    `);
+
+    const input = page.locator("ds-input").getByRole("textbox");
+    await input.waitFor({ state: "visible" });
+
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    const emailNodes = nodes.filter((n) => n.name?.value === "Email");
+
+    assert.strictEqual(
+      emailNodes.length,
+      2,
+      `Double announcement detected for external label: Expected 'Email' to appear 2 times in the a11y tree (once for label, once for control), but found ${emailNodes.length} times.`,
+    );
+  },
+);
