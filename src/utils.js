@@ -124,6 +124,70 @@ export class CustomElement extends HTMLElement {
     }
   }
 
+  syncAccessibilityAttributes(innerElement, extraAttributes = []) {
+    if (!innerElement) return;
+
+    // 1. Accessible Name
+    const ariaLabel = this.getAttribute("aria-label");
+    if (ariaLabel) {
+      innerElement.setAttribute("aria-label", ariaLabel);
+    } else {
+      const ariaLabelledBy = this.getAttribute("aria-labelledby");
+      if (ariaLabelledBy) {
+        const resolvedText = ariaLabelledBy
+          .split(/\s+/)
+          .map((id) => {
+            const el = document.getElementById(id);
+            return el ? el.textContent.trim() : "";
+          })
+          .filter(Boolean)
+          .join(" ");
+        if (resolvedText) {
+          innerElement.setAttribute("aria-label", resolvedText);
+        } else {
+          innerElement.removeAttribute("aria-label");
+        }
+      } else if (this.internals.labels && this.internals.labels.length > 0) {
+        const labelText = Array.from(this.internals.labels)
+          .map((label) => label.textContent.trim())
+          .join(" ");
+        innerElement.setAttribute("aria-label", labelText);
+      } else {
+        innerElement.removeAttribute("aria-label");
+      }
+    }
+
+    // 2. Accessible Description
+    const ariaDescribedBy = this.getAttribute("aria-describedby");
+    if (ariaDescribedBy) {
+      const resolvedDescription = ariaDescribedBy
+        .split(/\s+/)
+        .map((id) => {
+          const el = document.getElementById(id);
+          return el ? el.textContent.trim() : "";
+        })
+        .filter(Boolean)
+        .join(" ");
+      if (resolvedDescription) {
+        innerElement.setAttribute("aria-description", resolvedDescription);
+      } else {
+        innerElement.removeAttribute("aria-description");
+      }
+    } else {
+      innerElement.removeAttribute("aria-description");
+    }
+
+    // 3. Component-Specific Extra Attributes
+    for (const attr of extraAttributes) {
+      const value = this.getAttribute(attr);
+      if (value !== null) {
+        innerElement.setAttribute(attr, value);
+      } else {
+        innerElement.removeAttribute(attr);
+      }
+    }
+  }
+
   #validateAttributes(value, name) {
     const attributes = this.constructor.meta?.attributes;
 

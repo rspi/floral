@@ -112,3 +112,69 @@ uiTest("ds-switch should be disabled in a disabled fieldset", async (page) => {
   const sw = page.getByRole("switch", { name: "Switch" });
   assert.strictEqual(await sw.isDisabled(), true);
 });
+
+uiTest(
+  "ds-switch should synchronize the 'aria-labelledby' attribute to the inner element's aria-label",
+  async (page) => {
+    await page.mount(`
+      <span id="title">Toggle Feature</span>
+      <ds-switch id="switch" aria-labelledby="title"></ds-switch>
+    `);
+    const host = page.locator("#switch");
+    await host.focus();
+
+    const sw = page.getByRole("switch", { name: "Toggle Feature" });
+    await sw.waitFor({ state: "visible" });
+    assert.ok(await sw.isVisible());
+  },
+);
+
+uiTest(
+  "ds-switch should handle 'aria-describedby' natively on the host",
+  async (page) => {
+    await page.mount(`
+      <div id="desc">Enabling this turns on notifications.</div>
+      <ds-switch id="switch" aria-describedby="desc"></ds-switch>
+    `);
+    const host = page.locator("#switch");
+    await host.focus();
+
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+    const switchNode = nodes.find((n) => n.role?.value === "switch");
+
+    assert.ok(switchNode, "Switch node not found in browser AXTree");
+    assert.strictEqual(
+      switchNode.description?.value,
+      "Enabling this turns on notifications.",
+      "Browser computed an incorrect accessible description in the AXTree",
+    );
+  },
+);
+
+uiTest(
+  "ds-switch should recover associated labels when aria-label is dynamically removed",
+  async (page) => {
+    await page.mount(`
+      <label for="switch">Dynamic Label</label>
+      <ds-switch id="switch" aria-label="Temporary Label"></ds-switch>
+    `);
+    const host = page.locator("#switch");
+    await host.focus();
+
+    // Verify initial state (aria-label on host wins)
+    let sw = page.getByRole("switch", { name: "Temporary Label" });
+    await sw.waitFor({ state: "visible" });
+    assert.ok(await sw.isVisible());
+
+    // Remove aria-label dynamically
+    await page.evaluate(() => {
+      document.getElementById("switch").removeAttribute("aria-label");
+    });
+
+    // Verify fallback recovery of the associated label
+    sw = page.getByRole("switch", { name: "Dynamic Label" });
+    await sw.waitFor({ state: "visible" });
+    assert.ok(await sw.isVisible());
+  },
+);

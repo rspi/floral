@@ -23,6 +23,8 @@ window.customElements.define(
         autofocus: [""],
         name: [],
         "aria-label": [],
+        "aria-labelledby": [],
+        "aria-describedby": [],
       },
       slots: {},
       parts: {},
@@ -44,19 +46,6 @@ window.customElements.define(
         this.#input.removeAttribute("aria-invalid");
       } else {
         this.#input.setAttribute("aria-invalid", "true");
-      }
-    }
-
-    #syncAssociatedLabels() {
-      if (this.hasAttribute("aria-label")) return;
-
-      if (this.internals.labels && this.internals.labels.length > 0) {
-        const labelText = Array.from(this.internals.labels)
-          .map((label) => label.textContent.trim())
-          .join(" ");
-        this.#input.setAttribute("aria-label", labelText);
-      } else {
-        this.#input.removeAttribute("aria-label");
       }
     }
 
@@ -107,11 +96,13 @@ window.customElements.define(
         this.#input.autofocus = newValue;
       } else if (name === "disabled") {
         this.#updateDisabledState(newValue);
-      } else if (name === "aria-label") {
-        if (newValue) {
-          this.#input.setAttribute("aria-label", newValue);
-        } else {
-          this.#input.removeAttribute("aria-label");
+      } else if (
+        name === "aria-label" ||
+        name === "aria-labelledby" ||
+        name === "aria-describedby"
+      ) {
+        if (this.matches(":focus") || this.matches(":focus-within")) {
+          this.syncAccessibilityAttributes(this.#input, ["aria-autocomplete"]);
         }
       }
     }
@@ -122,7 +113,6 @@ window.customElements.define(
         this.#initialValueCaptured = true;
       }
       this.#updateValidity();
-      this.#syncAssociatedLabels();
     }
 
     formDisabledCallback(disabled) {
@@ -135,6 +125,7 @@ window.customElements.define(
       this.internals.setFormValue(this.#initialValue);
       this.#updateValidity();
     }
+
     #handleInput = () => {
       this.value = this.#input.value;
       this.internals.setFormValue(this.value);
@@ -156,6 +147,7 @@ window.customElements.define(
 
     constructor() {
       super();
+      this.internals.role = "none";
       this.#input = this.shadowRoot.querySelector("input");
 
       // Add 'touched' state on invalid event (e.g. form submission attempt)
@@ -174,7 +166,13 @@ window.customElements.define(
       });
 
       this.addEventListener("focusin", () => {
-        this.#syncAssociatedLabels();
+        this.syncAccessibilityAttributes(this.#input, ["aria-autocomplete"]);
+      });
+
+      this.addEventListener("focusout", () => {
+        this.#input.removeAttribute("aria-label");
+        this.#input.removeAttribute("aria-description");
+        this.#input.removeAttribute("aria-autocomplete");
       });
 
       this.#updateValidity();
