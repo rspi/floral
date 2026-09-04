@@ -51,9 +51,9 @@ uiTest("ds-component should pass a11y audit", async (page) => {
 });
 ```
 
-### Accessibility Tree Verification (Cross-Shadow DOM)
+### Accessibility Tree Verification (Cross-Shadow DOM & CDP)
 
-When using modern APIs like `ariaDescribedByElements` that do not reflect as DOM attributes, verify the relationship using a snapshot of the accessibility tree.
+When using modern Web Component APIs like `referenceTarget` or `ariaDescribedByElements` that do not reflect as standard DOM attributes on the host, always query the browser's raw **Accessibility Tree (AXTree)** via a Chrome DevTools Protocol (CDP) session to verify relationships accurately.
 
 ```javascript
 uiTest("ds-tooltip should provide an accessible description", async (page) => {
@@ -64,26 +64,18 @@ uiTest("ds-tooltip should provide an accessible description", async (page) => {
     </ds-tooltip>
   `);
 
-  // Helper to find a node by name in the tree
-  const findNode = (node, name) => {
-    if (node.name === name) return node;
-    if (node.children) {
-      for (const child of node.children) {
-        const found = findNode(child, name);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
+  // Query browser's raw AXTree via CDP Session
+  const client = await page.context().newCDPSession(page);
+  const { nodes } = await client.send("Accessibility.getFullAXTree");
 
-  const snapshot = await (page.accessibilitySnapshot
-    ? page.accessibilitySnapshot()
-    : page.accessibility.snapshot());
-  const button = findNode(snapshot, "Hover me");
+  // Find the focusable control node and assert its calculated properties
+  const buttonNode = nodes.find(
+    (n) => n.role?.value === "button" && n.name?.value === "Hover me" && !n.ignored
+  );
 
-  assert.ok(button, "Button not found in accessibility tree");
+  assert.ok(buttonNode, "Button element not found in AXTree");
   assert.strictEqual(
-    button.description,
+    buttonNode.description?.value,
     "Tooltip Content",
     "Button should be described by the tooltip",
   );

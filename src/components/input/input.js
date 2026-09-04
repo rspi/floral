@@ -1,7 +1,7 @@
 import sheet from "./input.css" with { type: "css" };
-import { CustomElement } from "../../utils.js";
+import { CustomElement, syncOutwardAccessibility } from "../../utils.js";
 
-const html = `<input />`;
+const html = `<input id="inner-input" />`;
 
 window.customElements.define(
   "ds-input",
@@ -10,6 +10,7 @@ window.customElements.define(
     static sheet = sheet;
     static formAssociated = true;
     static delegatesFocus = true;
+    static referenceTarget = "inner-input";
 
     static meta = {
       attributes: {
@@ -23,6 +24,8 @@ window.customElements.define(
         autofocus: [""],
         name: [],
         "aria-label": [],
+        "aria-labelledby": [],
+        "aria-describedby": [],
       },
       slots: {},
       parts: {},
@@ -44,19 +47,6 @@ window.customElements.define(
         this.#input.removeAttribute("aria-invalid");
       } else {
         this.#input.setAttribute("aria-invalid", "true");
-      }
-    }
-
-    #syncAssociatedLabels() {
-      if (this.hasAttribute("aria-label")) return;
-
-      if (this.internals.labels && this.internals.labels.length > 0) {
-        const labelText = Array.from(this.internals.labels)
-          .map((label) => label.textContent.trim())
-          .join(" ");
-        this.#input.setAttribute("aria-label", labelText);
-      } else {
-        this.#input.removeAttribute("aria-label");
       }
     }
 
@@ -113,6 +103,8 @@ window.customElements.define(
         } else {
           this.#input.removeAttribute("aria-label");
         }
+      } else if (name === "aria-labelledby" || name === "aria-describedby") {
+        syncOutwardAccessibility(this, this.#input);
       }
     }
 
@@ -122,7 +114,12 @@ window.customElements.define(
         this.#initialValueCaptured = true;
       }
       this.#updateValidity();
-      this.#syncAssociatedLabels();
+      syncOutwardAccessibility(this, this.#input);
+    }
+
+    connectedCallback() {
+      super.connectedCallback();
+      syncOutwardAccessibility(this, this.#input);
     }
 
     formDisabledCallback(disabled) {
@@ -135,10 +132,10 @@ window.customElements.define(
       this.internals.setFormValue(this.#initialValue);
       this.#updateValidity();
     }
+
     #handleInput = () => {
       this.value = this.#input.value;
       this.internals.setFormValue(this.value);
-      this.internals.states.add("touched");
       this.#updateValidity();
     };
 
@@ -171,10 +168,6 @@ window.customElements.define(
       this.#input.addEventListener("keydown", this.#handleKeyDown);
       this.#input.addEventListener("blur", () => {
         this.internals.states.add("touched");
-      });
-
-      this.addEventListener("focusin", () => {
-        this.#syncAssociatedLabels();
       });
 
       this.#updateValidity();
