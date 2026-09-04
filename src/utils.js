@@ -23,10 +23,14 @@ export class CustomElement extends HTMLElement {
     super();
     this.internals = this.attachInternals();
 
-    this.attachShadow({
+    const attachOptions = {
       mode: "open",
       delegatesFocus: this.constructor.delegatesFocus || false,
-    });
+    };
+    if (this.constructor.referenceTarget) {
+      attachOptions.referenceTarget = this.constructor.referenceTarget;
+    }
+    this.attachShadow(attachOptions);
 
     if (this.constructor.sheet) {
       this.shadowRoot.adoptedStyleSheets = [this.constructor.sheet];
@@ -146,4 +150,39 @@ export class CustomElement extends HTMLElement {
           `);
     }
   }
+}
+
+function findElementsReferencedByAttribute(host, attrName) {
+  const elements = [];
+  const value = host.getAttribute(attrName);
+  if (value) {
+    const root = host.getRootNode();
+    if (root && typeof root.getElementById === "function") {
+      const ids = value.split(/\s+/);
+      for (const id of ids) {
+        const el = root.getElementById(id);
+        if (el) elements.push(el);
+      }
+    }
+  }
+  return elements;
+}
+
+export function syncOutwardAccessibility(host, target) {
+  if (!host || !target) return;
+
+  // 1. Sync aria-labelledby elements
+  const labelElements = findElementsReferencedByAttribute(
+    host,
+    "aria-labelledby",
+  );
+  if (labelElements.length > 0) {
+    target.ariaLabelledByElements = labelElements;
+  }
+
+  // 2. Sync aria-describedby elements
+  target.ariaDescribedByElements = findElementsReferencedByAttribute(
+    host,
+    "aria-describedby",
+  );
 }

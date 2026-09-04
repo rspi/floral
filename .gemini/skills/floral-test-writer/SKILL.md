@@ -21,7 +21,7 @@ Your goal is to generate resilient, accessible, and performant tests for Web Com
 6. **No Manual Waiting:** NEVER use `page.waitForTimeout()`. Rely on Playwright's auto-waiting locators and explicit `waitFor` calls. For time-based behaviors (delays, timeouts), use the **Playwright Clock API** (`page.clock.install()`, `page.clock.runFor(ms)`) to jump past timeouts instantly.
 7. **A11y & ARIA:** Verify correct ARIA roles, states (`aria-disabled`, `aria-invalid`), and relationships (`aria-describedby`, `aria-controls`).
    - Use `page.checkA11y()` for general accessibility audits (powered by axe-core).
-   - Use `page.accessibilitySnapshot()` (or `page.accessibility.snapshot()`) to verify the actual accessibility tree, especially for cross-Shadow DOM relationships like `ariaDescribedByElements` that do not appear as DOM attributes.
+   - Query the browser's raw **Accessibility Tree (AXTree)** via a Chrome DevTools Protocol (CDP) session (`await client.send("Accessibility.getFullAXTree")`) to verify real-time, browser-computed cross-Shadow DOM relationships that do not appear as simple DOM attributes.
 8. **Transitions:** Transitions and animations are disabled globally in `uiTest` for stability.
 
 ## Testing Workflow
