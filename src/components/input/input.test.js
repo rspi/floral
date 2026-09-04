@@ -394,7 +394,79 @@ uiTest(
 );
 
 uiTest(
-  "ds-input should dynamically synchronize associated Light-DOM labels to the inner input's aria-label",
+  "ds-input should expose exactly one textbox node in the Accessibility Tree (AXTree) to prevent double-announcement",
+  async (page) => {
+    await page.mount(`
+      <label for="double-input">Billing Address</label>
+      <ds-input id="double-input"></ds-input>
+    `);
+    const host = page.locator("#double-input");
+    await host.focus();
+
+    // Query browser's AXTree
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    // Filter for all nodes that expose a "textbox" role
+    const textboxNodes = nodes.filter(
+      (n) => n.role?.value === "textbox" && !n.ignored,
+    );
+
+    assert.strictEqual(
+      textboxNodes.length,
+      1,
+      `Expected exactly 1 textbox node in the AXTree, but found ${textboxNodes.length}. Multiple textbox nodes cause screen reader double-announcements.`,
+    );
+
+    assert.strictEqual(
+      textboxNodes[0].name?.value,
+      "Billing Address",
+      "Expected the single textbox node to be named 'Billing Address'",
+    );
+  },
+);
+
+uiTest(
+  "ds-input should expose exactly one node with the computed accessible name in the Accessibility Tree (AXTree) to prevent the label from being read twice",
+  async (page) => {
+    await page.mount(`
+      <label for="unique-label-input">Billing Address</label>
+      <ds-input id="unique-label-input"></ds-input>
+    `);
+    const host = page.locator("#unique-label-input");
+    await host.focus();
+
+    // Query browser's AXTree
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    // Filter for non-ignored, focusable or interactive control nodes in the tree that carry the name "Billing Address"
+    const interactiveNamedNodes = nodes.filter((n) => {
+      if (n.ignored || n.name?.value !== "Billing Address") return false;
+
+      const isControlRole = [
+        "textbox",
+        "switch",
+        "checkbox",
+        "button",
+      ].includes(n.role?.value);
+      const isFocusable = n.properties?.some(
+        (p) => p.name === "focusable" && p.value?.value === true,
+      );
+
+      return isControlRole || isFocusable;
+    });
+
+    assert.strictEqual(
+      interactiveNamedNodes.length,
+      1,
+      `Expected exactly 1 focusable/control node with the computed name "Billing Address" in the AXTree, but found ${interactiveNamedNodes.length}. Multiple focusable named nodes cause screen readers to announce the label twice.`,
+    );
+  },
+);
+
+uiTest(
+  "ds-input should dynamically synchronize associated Light-DOM labels to the inner input's computed name in the browser's Accessibility Tree (AXTree)",
   async (page) => {
     await page.mount(`
       <label id="lbl1" for="labeled-input">First Label</label>
@@ -406,12 +478,17 @@ uiTest(
     // Ensure focus triggers label syncing
     await host.focus();
 
-    // Verify both labels are concatenated and computed as the accessible name via getByRole
-    const textbox = page.getByRole("textbox", {
-      name: "First Label Second Label",
-    });
-    await textbox.waitFor({ state: "visible" });
-    assert.ok(await textbox.isVisible());
+    // Verify both labels are concatenated and computed as the accessible name via browser's raw AXTree
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+    const textboxNode = nodes.find((n) => n.role?.value === "textbox");
+
+    assert.ok(textboxNode, "Textbox node not found in browser AXTree");
+    assert.strictEqual(
+      textboxNode.name?.value,
+      "First Label Second Label",
+      "Browser computed an incorrect accessible name in the AXTree",
+    );
   },
 );
 

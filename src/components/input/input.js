@@ -1,5 +1,5 @@
 import sheet from "./input.css" with { type: "css" };
-import { CustomElement } from "../../utils.js";
+import { CustomElement, syncAccessibility } from "../../utils.js";
 
 const html = `<input />`;
 
@@ -23,6 +23,8 @@ window.customElements.define(
         autofocus: [""],
         name: [],
         "aria-label": [],
+        "aria-labelledby": [],
+        "aria-describedby": [],
       },
       slots: {},
       parts: {},
@@ -47,17 +49,8 @@ window.customElements.define(
       }
     }
 
-    #syncAssociatedLabels() {
-      if (this.hasAttribute("aria-label")) return;
-
-      if (this.internals.labels && this.internals.labels.length > 0) {
-        const labelText = Array.from(this.internals.labels)
-          .map((label) => label.textContent.trim())
-          .join(" ");
-        this.#input.setAttribute("aria-label", labelText);
-      } else {
-        this.#input.removeAttribute("aria-label");
-      }
+    #syncAccessibility() {
+      syncAccessibility(this, this.#input);
     }
 
     #updateDisabledState(disabled) {
@@ -107,12 +100,12 @@ window.customElements.define(
         this.#input.autofocus = newValue;
       } else if (name === "disabled") {
         this.#updateDisabledState(newValue);
-      } else if (name === "aria-label") {
-        if (newValue) {
-          this.#input.setAttribute("aria-label", newValue);
-        } else {
-          this.#input.removeAttribute("aria-label");
-        }
+      } else if (
+        name === "aria-label" ||
+        name === "aria-labelledby" ||
+        name === "aria-describedby"
+      ) {
+        this.#syncAccessibility();
       }
     }
 
@@ -122,7 +115,11 @@ window.customElements.define(
         this.#initialValueCaptured = true;
       }
       this.#updateValidity();
-      this.#syncAssociatedLabels();
+    }
+
+    connectedCallback() {
+      super.connectedCallback();
+      this.#syncAccessibility();
     }
 
     formDisabledCallback(disabled) {
@@ -173,8 +170,8 @@ window.customElements.define(
         this.internals.states.add("touched");
       });
 
-      this.addEventListener("focusin", () => {
-        this.#syncAssociatedLabels();
+      this.#input.addEventListener("focusin", () => {
+        this.#syncAccessibility();
       });
 
       this.#updateValidity();

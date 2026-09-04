@@ -147,3 +147,83 @@ export class CustomElement extends HTMLElement {
     }
   }
 }
+
+export function syncAccessibility(host, target) {
+  if (!host || !target) return;
+
+  // 1. Set ariaLabelledByElements natively if supported
+  if ("ariaLabelledByElements" in target) {
+    const elements = [];
+
+    // Add external label elements (from <label for="..."> or wrapping <label>)
+    if (host.internals?.labels && host.internals.labels.length > 0) {
+      elements.push(...Array.from(host.internals.labels));
+    }
+
+    // Add aria-labelledby elements
+    const ariaLabelledby = host.getAttribute("aria-labelledby");
+    if (ariaLabelledby) {
+      const root = host.getRootNode();
+      if (root && typeof root.getElementById === "function") {
+        const ids = ariaLabelledby.split(/\s+/);
+        for (const id of ids) {
+          const el = root.getElementById(id);
+          if (el) elements.push(el);
+        }
+      }
+    }
+
+    target.ariaLabelledByElements = elements;
+  }
+
+  // 2. Set aria-label if there are no element labels
+  const ariaLabel = host.getAttribute("aria-label");
+  const hasAriaLabelledby = host.hasAttribute("aria-labelledby");
+  const hasLabels = host.internals?.labels && host.internals.labels.length > 0;
+
+  if (ariaLabel && !hasAriaLabelledby && !hasLabels) {
+    target.setAttribute("aria-label", ariaLabel);
+  } else {
+    target.removeAttribute("aria-label");
+  }
+
+  // 3. Set descriptions natively via element references and sync to aria-description attribute.
+  // We use aria-description attribute because element reference properties (ariaDescribedByElements)
+  // silently fail in Chromium when referencing elements outside the Shadow DOM tree-scope.
+  const ariaDescribedby = host.getAttribute("aria-describedby");
+  if (ariaDescribedby) {
+    const root = host.getRootNode();
+    if (root && typeof root.getElementById === "function") {
+      const ids = ariaDescribedby.split(/\s+/);
+      const elements = ids.map((id) => root.getElementById(id)).filter(Boolean);
+
+      if (elements.length > 0) {
+        const descriptionText = elements
+          .map((el) => el.textContent.trim())
+          .join(" ");
+        target.setAttribute("aria-description", descriptionText);
+
+        if ("ariaDescribedByElements" in target) {
+          target.ariaDescribedByElements = elements;
+        }
+      } else {
+        target.removeAttribute("aria-description");
+        if ("ariaDescribedByElements" in target) {
+          target.ariaDescribedByElements = [];
+        }
+      }
+    }
+  } else {
+    target.removeAttribute("aria-description");
+    if ("ariaDescribedByElements" in target) {
+      target.ariaDescribedByElements = [];
+    }
+  }
+
+  // Sync general description attribute fallback
+  if (ariaDescribedby) {
+    target.setAttribute("aria-describedby", ariaDescribedby);
+  } else {
+    target.removeAttribute("aria-describedby");
+  }
+}

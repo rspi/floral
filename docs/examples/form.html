@@ -95,7 +95,7 @@
     <div class="toggle-section">
       <div>
         <label for="form-marketing">Subscribe to newsletter</label>
-        <span class="description"
+        <span id="marketing-desc" class="description"
           >Get the latest updates on Floral developments.</span
         >
       </div>
@@ -103,19 +103,23 @@
         id="form-marketing"
         name="marketing"
         value="subscribed"
+        aria-describedby="marketing-desc"
       ></ds-switch>
     </div>
 
     <div class="toggle-section">
       <div>
         <label for="form-terms">I agree to the Terms of Service</label>
-        <span class="description">You must accept the terms to proceed.</span>
+        <span id="terms-desc" class="description"
+          >You must accept the terms to proceed.</span
+        >
       </div>
       <ds-switch
         id="form-terms"
         name="terms"
         required
         value="accepted"
+        aria-describedby="terms-desc"
       ></ds-switch>
     </div>
 

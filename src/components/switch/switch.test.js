@@ -112,3 +112,129 @@ uiTest("ds-switch should be disabled in a disabled fieldset", async (page) => {
   const sw = page.getByRole("switch", { name: "Switch" });
   assert.strictEqual(await sw.isDisabled(), true);
 });
+
+uiTest(
+  "ds-switch should expose exactly one switch node in the Accessibility Tree (AXTree) to prevent double-announcement",
+  async (page) => {
+    await page.mount(`
+      <label for="double-switch">Turbo Mode</label>
+      <ds-switch id="double-switch"></ds-switch>
+    `);
+    const host = page.locator("#double-switch");
+    await host.focus();
+
+    // Query browser's AXTree
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    // Filter for all nodes that expose a "switch" role
+    const switchNodes = nodes.filter(
+      (n) => n.role?.value === "switch" && !n.ignored,
+    );
+
+    assert.strictEqual(
+      switchNodes.length,
+      1,
+      `Expected exactly 1 switch node in the AXTree, but found ${switchNodes.length}. Multiple switch nodes cause screen reader double-announcements.`,
+    );
+
+    assert.strictEqual(
+      switchNodes[0].name?.value,
+      "Turbo Mode",
+      "Expected the single switch node to be named 'Turbo Mode'",
+    );
+  },
+);
+
+uiTest(
+  "ds-switch should expose exactly one node with the computed accessible name in the Accessibility Tree (AXTree) to prevent the label from being read twice",
+  async (page) => {
+    await page.mount(`
+      <label for="unique-label-switch">Turbo Mode</label>
+      <ds-switch id="unique-label-switch"></ds-switch>
+    `);
+    const host = page.locator("#unique-label-switch");
+    await host.focus();
+
+    // Query browser's AXTree
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    // Filter for non-ignored, focusable or interactive control nodes in the tree that carry the name "Turbo Mode"
+    const interactiveNamedNodes = nodes.filter((n) => {
+      if (n.ignored || n.name?.value !== "Turbo Mode") return false;
+
+      const isControlRole = [
+        "textbox",
+        "switch",
+        "checkbox",
+        "button",
+      ].includes(n.role?.value);
+      const isFocusable = n.properties?.some(
+        (p) => p.name === "focusable" && p.value?.value === true,
+      );
+
+      return isControlRole || isFocusable;
+    });
+
+    assert.strictEqual(
+      interactiveNamedNodes.length,
+      1,
+      `Expected exactly 1 focusable/control node with the computed name "Turbo Mode" in the AXTree, but found ${interactiveNamedNodes.length}. Multiple focusable named nodes cause screen readers to announce the label twice.`,
+    );
+  },
+);
+
+uiTest(
+  "ds-switch should dynamically synchronize associated Light-DOM labels to the inner input's computed name in the browser's Accessibility Tree (AXTree)",
+  async (page) => {
+    await page.mount(`
+      <label id="sw-lbl1" for="labeled-switch">Enable Turbo</label>
+      <ds-switch id="labeled-switch"></ds-switch>
+      <label id="sw-lbl2" for="labeled-switch">Instantly</label>
+    `);
+    const host = page.locator("#labeled-switch");
+
+    // Ensure focus triggers label syncing
+    await host.focus();
+
+    // Verify both labels are concatenated and computed as the accessible name via browser's raw AXTree
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+    const switchNode = nodes.find((n) => n.role?.value === "switch");
+
+    assert.ok(switchNode, "Switch node not found in browser AXTree");
+    assert.strictEqual(
+      switchNode.name?.value,
+      "Enable Turbo Instantly",
+      "Browser computed an incorrect accessible name in the AXTree",
+    );
+  },
+);
+
+uiTest(
+  "ds-switch should dynamically synchronize associated descriptions to the inner input's computed description in the browser's Accessibility Tree (AXTree)",
+  async (page) => {
+    await page.mount(`
+      <ds-switch id="described-switch" aria-label="Dark Mode" aria-describedby="sw-desc1 sw-desc2"></ds-switch>
+      <span id="sw-desc1">Turns screen dark.</span>
+      <span id="sw-desc2">Saves battery life.</span>
+    `);
+    const host = page.locator("#described-switch");
+
+    // Ensure focus triggers syncing
+    await host.focus();
+
+    // Verify descriptions are concatenated and computed as the accessible description via browser's raw AXTree
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+    const switchNode = nodes.find((n) => n.role?.value === "switch");
+
+    assert.ok(switchNode, "Switch node not found in browser AXTree");
+    assert.strictEqual(
+      switchNode.description?.value,
+      "Turns screen dark. Saves battery life.",
+      "Browser computed an incorrect accessible description in the AXTree",
+    );
+  },
+);

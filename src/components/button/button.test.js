@@ -308,3 +308,33 @@ uiTest("ds-button should pass accessibility audit", async (page) => {
   await page.mount("<ds-button>Accessible Button</ds-button>");
   await page.checkA11y();
 });
+
+uiTest(
+  "ds-button should expose exactly one button node in the Accessibility Tree (AXTree) to prevent double-announcement",
+  async (page) => {
+    await page.mount(`<ds-button id="double-btn">Click Me</ds-button>`);
+    const host = page.locator("#double-btn");
+    await host.focus();
+
+    // Query browser's AXTree
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    // Filter for all nodes that expose a "button" role
+    const buttonNodes = nodes.filter(
+      (n) => n.role?.value === "button" && !n.ignored,
+    );
+
+    assert.strictEqual(
+      buttonNodes.length,
+      1,
+      `Expected exactly 1 button node in the AXTree, but found ${buttonNodes.length}. Multiple button nodes cause screen reader double-announcements.`,
+    );
+
+    assert.strictEqual(
+      buttonNodes[0].name?.value,
+      "Click Me",
+      "Expected the single button node to be named 'Click Me'",
+    );
+  },
+);

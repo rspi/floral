@@ -1,5 +1,5 @@
 import sheet from "./switch.css" with { type: "css" };
-import { CustomElement } from "../../utils.js";
+import { CustomElement, syncAccessibility } from "../../utils.js";
 
 const html = `
 <input type="checkbox" role="switch" />
@@ -18,6 +18,8 @@ window.customElements.define(
         checked: [""],
         disabled: [""],
         "aria-label": [],
+        "aria-labelledby": [],
+        "aria-describedby": [],
       },
       slots: {},
       parts: {},
@@ -30,20 +32,22 @@ window.customElements.define(
       this.#input.disabled = disabled;
     }
 
+    #syncAccessibility() {
+      syncAccessibility(this, this.#input);
+    }
+
     handleStateChange(name, oldValue, newValue) {
       if (name === "checked") {
         this.#input.checked = newValue;
         this.internals.setFormValue(newValue ? "on" : null);
-      }
-      if (name === "disabled") {
+      } else if (name === "disabled") {
         this.#updateDisabledState(newValue);
-      }
-      if (name === "aria-label") {
-        if (newValue) {
-          this.#input.setAttribute("aria-label", newValue);
-        } else {
-          this.#input.removeAttribute("aria-label");
-        }
+      } else if (
+        name === "aria-label" ||
+        name === "aria-labelledby" ||
+        name === "aria-describedby"
+      ) {
+        this.#syncAccessibility();
       }
     }
 
@@ -54,6 +58,15 @@ window.customElements.define(
       );
     };
 
+    setup() {
+      this.#syncAccessibility();
+    }
+
+    connectedCallback() {
+      super.connectedCallback();
+      this.#syncAccessibility();
+    }
+
     formDisabledCallback(disabled) {
       this.#updateDisabledState(disabled);
     }
@@ -62,6 +75,10 @@ window.customElements.define(
       super();
       this.#input = this.shadowRoot.querySelector("input");
       this.#input.addEventListener("change", this.#handleChange);
+
+      this.#input.addEventListener("focusin", () => {
+        this.#syncAccessibility();
+      });
     }
   },
 );
