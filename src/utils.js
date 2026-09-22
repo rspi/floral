@@ -54,6 +54,72 @@ export class CustomElement extends HTMLElement {
     }
   }
 
+  get ariaLabelledByElements() {
+    if (this.constructor.referenceTarget && this.shadowRoot) {
+      const target = this.shadowRoot.getElementById(
+        this.constructor.referenceTarget,
+      );
+      if (target) return target.ariaLabelledByElements;
+    }
+    const desc = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "ariaLabelledByElements",
+    );
+    return desc ? desc.get.call(this) : [];
+  }
+
+  set ariaLabelledByElements(elements) {
+    if (this.constructor.referenceTarget && this.shadowRoot) {
+      const target = this.shadowRoot.getElementById(
+        this.constructor.referenceTarget,
+      );
+      if (target) {
+        target.ariaLabelledByElements = elements;
+        return;
+      }
+    }
+    const desc = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "ariaLabelledByElements",
+    );
+    if (desc) {
+      desc.set.call(this, elements);
+    }
+  }
+
+  get ariaDescribedByElements() {
+    if (this.constructor.referenceTarget && this.shadowRoot) {
+      const target = this.shadowRoot.getElementById(
+        this.constructor.referenceTarget,
+      );
+      if (target) return target.ariaDescribedByElements;
+    }
+    const desc = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "ariaDescribedByElements",
+    );
+    return desc ? desc.get.call(this) : [];
+  }
+
+  set ariaDescribedByElements(elements) {
+    if (this.constructor.referenceTarget && this.shadowRoot) {
+      const target = this.shadowRoot.getElementById(
+        this.constructor.referenceTarget,
+      );
+      if (target) {
+        target.ariaDescribedByElements = elements;
+        return;
+      }
+    }
+    const desc = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      "ariaDescribedByElements",
+    );
+    if (desc) {
+      desc.set.call(this, elements);
+    }
+  }
+
   #setupStateAndProperties() {
     const metaAttrs = this.constructor.meta?.attributes;
     if (!metaAttrs) return;

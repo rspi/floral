@@ -1,0 +1,15 @@
+:host {
+  display: inline-block;
+  cursor: pointer;
+  user-select: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ds-color-text);
+}
+
+label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-space-xs);
+}
