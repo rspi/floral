@@ -54,6 +54,60 @@ export class CustomElement extends HTMLElement {
     }
   }
 
+  disconnectedCallback() {}
+
+  // Forward element-reflecting AOM properties (ariaLabelledByElements, ariaDescribedByElements)
+  // to the internal referenceTarget element when defined.
+  // Native referenceTarget currently only proxies IDREF attributes (like 'for' or 'aria-labelledby'),
+  // not in-memory element reference properties. This proxy bridges the gap without requiring
+  // synthetic ID generation or Light DOM attribute mutations.
+  // Note: Can conflict if the browser engine standardizes this natively in the future.
+  get ariaLabelledByElements() {
+    if (this.constructor.referenceTarget && this.shadowRoot) {
+      const target = this.shadowRoot.getElementById(
+        this.constructor.referenceTarget,
+      );
+      if (target) return target.ariaLabelledByElements;
+    }
+    return super.ariaLabelledByElements ?? [];
+  }
+
+  set ariaLabelledByElements(elements) {
+    if (this.constructor.referenceTarget && this.shadowRoot) {
+      const target = this.shadowRoot.getElementById(
+        this.constructor.referenceTarget,
+      );
+      if (target) {
+        target.ariaLabelledByElements = elements;
+        return;
+      }
+    }
+    super.ariaLabelledByElements = elements;
+  }
+
+  get ariaDescribedByElements() {
+    if (this.constructor.referenceTarget && this.shadowRoot) {
+      const target = this.shadowRoot.getElementById(
+        this.constructor.referenceTarget,
+      );
+      if (target) return target.ariaDescribedByElements;
+    }
+    return super.ariaDescribedByElements ?? [];
+  }
+
+  set ariaDescribedByElements(elements) {
+    if (this.constructor.referenceTarget && this.shadowRoot) {
+      const target = this.shadowRoot.getElementById(
+        this.constructor.referenceTarget,
+      );
+      if (target) {
+        target.ariaDescribedByElements = elements;
+        return;
+      }
+    }
+    super.ariaDescribedByElements = elements;
+  }
+
   #setupStateAndProperties() {
     const metaAttrs = this.constructor.meta?.attributes;
     if (!metaAttrs) return;
@@ -172,17 +226,18 @@ export function syncOutwardAccessibility(host, target) {
   if (!host || !target) return;
 
   // 1. Sync aria-labelledby elements
-  const labelElements = findElementsReferencedByAttribute(
-    host,
-    "aria-labelledby",
-  );
-  if (labelElements.length > 0) {
-    target.ariaLabelledByElements = labelElements;
+  if (host.hasAttribute("aria-labelledby")) {
+    target.ariaLabelledByElements = findElementsReferencedByAttribute(
+      host,
+      "aria-labelledby",
+    );
   }
 
   // 2. Sync aria-describedby elements
-  target.ariaDescribedByElements = findElementsReferencedByAttribute(
-    host,
-    "aria-describedby",
-  );
+  if (host.hasAttribute("aria-describedby")) {
+    target.ariaDescribedByElements = findElementsReferencedByAttribute(
+      host,
+      "aria-describedby",
+    );
+  }
 }
