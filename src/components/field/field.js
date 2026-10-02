@@ -36,16 +36,29 @@ window.customElements.define(
 
     #lastLabel = null;
     #lastControl = null;
+    #isSetup = false;
 
-    #handleLabelClick = () => {
+    #handleLabelClick = (event) => {
+      if (
+        event?.target?.closest?.(
+          "a, button, input, select, textarea, ds-button, ds-switch, label[for]",
+        )
+      ) {
+        return;
+      }
+
       if (
         this.#lastControl &&
         !this.#lastControl.matches?.(":disabled") &&
         !this.#lastControl.disabled &&
-        !this.#lastControl.hasAttribute?.("disabled") &&
-        typeof this.#lastControl.focus === "function"
+        !this.#lastControl.hasAttribute?.("disabled")
       ) {
-        this.#lastControl.focus();
+        if (typeof this.#lastControl.focus === "function") {
+          this.#lastControl.focus();
+        }
+        if (typeof this.#lastControl.click === "function") {
+          this.#lastControl.click();
+        }
       }
     };
 
@@ -56,9 +69,9 @@ window.customElements.define(
 
       if (!labelSlot || !helperSlot || !controlSlot) return;
 
-      const label = labelSlot.assignedElements()[0];
-      const helper = helperSlot.assignedElements()[0];
-      const control = controlSlot.assignedElements()[0];
+      const label = labelSlot.assignedElements({ flatten: true })[0];
+      const helper = helperSlot.assignedElements({ flatten: true })[0];
+      const control = controlSlot.assignedElements({ flatten: true })[0];
 
       if (this.#lastLabel !== label) {
         if (this.#lastLabel) {
@@ -85,6 +98,7 @@ window.customElements.define(
     };
 
     setup() {
+      this.#isSetup = true;
       const labelSlot = this.shadowRoot.querySelector('slot[name="label"]');
       const helperSlot = this.shadowRoot.querySelector('slot[name="helper"]');
       const controlSlot = this.shadowRoot.querySelector("slot:not([name])");
@@ -98,13 +112,23 @@ window.customElements.define(
       this.#syncRelationships();
     }
 
+    connectedCallback() {
+      super.connectedCallback?.();
+      if (this.#isSetup) {
+        this.#syncRelationships();
+      }
+    }
+
     disconnectedCallback() {
+      super.disconnectedCallback?.();
       if (this.#lastLabel) {
         this.#lastLabel.removeEventListener("click", this.#handleLabelClick);
+        this.#lastLabel = null;
       }
       if (this.#lastControl) {
         this.#lastControl.ariaLabelledByElements = [];
         this.#lastControl.ariaDescribedByElements = [];
+        this.#lastControl = null;
       }
     }
   },

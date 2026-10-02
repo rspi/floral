@@ -144,3 +144,70 @@ uiTest("CustomElement should call handleStateChange", async (page) => {
     newValue: "changed",
   });
 });
+
+uiTest(
+  "CustomElement AOM property getters should return null when unset",
+  async (page) => {
+    await defineElement(page, "ds-test-element-aom", {
+      meta: { attributes: {} },
+    });
+
+    await page.mount("<ds-test-element-aom></ds-test-element-aom>");
+    const host = page.locator("ds-test-element-aom");
+
+    const result = await host.evaluate((el) => ({
+      labelledBy: el.ariaLabelledByElements,
+      describedBy: el.ariaDescribedByElements,
+    }));
+
+    assert.strictEqual(
+      result.labelledBy,
+      null,
+      "ariaLabelledByElements should be null when unset",
+    );
+    assert.strictEqual(
+      result.describedBy,
+      null,
+      "ariaDescribedByElements should be null when unset",
+    );
+  },
+);
+
+uiTest(
+  "syncOutwardAccessibility should clear target when attribute is removed from host",
+  async (page) => {
+    await page.mount(`
+    <div>
+      <span id="label-target">My Label</span>
+      <div id="host-element" aria-labelledby="label-target"></div>
+      <input id="target-input" />
+    </div>
+  `);
+
+    const result = await page.evaluate(async () => {
+      const { syncOutwardAccessibility } = await import("/src/utils.js");
+      const host = document.getElementById("host-element");
+      const target = document.getElementById("target-input");
+
+      syncOutwardAccessibility(host, target);
+      const initialCount = target.ariaLabelledByElements?.length ?? 0;
+
+      host.removeAttribute("aria-labelledby");
+      syncOutwardAccessibility(host, target);
+      const afterRemovalCount = target.ariaLabelledByElements?.length ?? 0;
+
+      return { initialCount, afterRemovalCount };
+    });
+
+    assert.strictEqual(
+      result.initialCount,
+      1,
+      "Target should have 1 referenced element initially",
+    );
+    assert.strictEqual(
+      result.afterRemovalCount,
+      0,
+      "Target should clear referenced elements after attribute is removed",
+    );
+  },
+);

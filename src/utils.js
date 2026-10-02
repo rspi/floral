@@ -56,6 +56,19 @@ export class CustomElement extends HTMLElement {
 
   disconnectedCallback() {}
 
+  click() {
+    if (this.constructor.referenceTarget && this.shadowRoot) {
+      const target = this.shadowRoot.getElementById(
+        this.constructor.referenceTarget,
+      );
+      if (target && typeof target.click === "function") {
+        target.click();
+        return;
+      }
+    }
+    super.click();
+  }
+
   // Forward element-reflecting AOM properties (ariaLabelledByElements, ariaDescribedByElements)
   // to the internal referenceTarget element when defined.
   // Native referenceTarget currently only proxies IDREF attributes (like 'for' or 'aria-labelledby'),
@@ -67,9 +80,9 @@ export class CustomElement extends HTMLElement {
       const target = this.shadowRoot.getElementById(
         this.constructor.referenceTarget,
       );
-      if (target) return target.ariaLabelledByElements;
+      if (target) return target.ariaLabelledByElements ?? null;
     }
-    return super.ariaLabelledByElements ?? [];
+    return super.ariaLabelledByElements ?? null;
   }
 
   set ariaLabelledByElements(elements) {
@@ -90,9 +103,9 @@ export class CustomElement extends HTMLElement {
       const target = this.shadowRoot.getElementById(
         this.constructor.referenceTarget,
       );
-      if (target) return target.ariaDescribedByElements;
+      if (target) return target.ariaDescribedByElements ?? null;
     }
-    return super.ariaDescribedByElements ?? [];
+    return super.ariaDescribedByElements ?? null;
   }
 
   set ariaDescribedByElements(elements) {
@@ -222,8 +235,16 @@ function findElementsReferencedByAttribute(host, attrName) {
   return elements;
 }
 
+const syncedFromHost = new WeakMap();
+
 export function syncOutwardAccessibility(host, target) {
   if (!host || !target) return;
+
+  let tracked = syncedFromHost.get(target);
+  if (!tracked) {
+    tracked = { labelledByFromAttr: false, describedByFromAttr: false };
+    syncedFromHost.set(target, tracked);
+  }
 
   // 1. Sync aria-labelledby elements
   if (host.hasAttribute("aria-labelledby")) {
@@ -231,6 +252,10 @@ export function syncOutwardAccessibility(host, target) {
       host,
       "aria-labelledby",
     );
+    tracked.labelledByFromAttr = true;
+  } else if (tracked.labelledByFromAttr) {
+    target.ariaLabelledByElements = [];
+    tracked.labelledByFromAttr = false;
   }
 
   // 2. Sync aria-describedby elements
@@ -239,5 +264,9 @@ export function syncOutwardAccessibility(host, target) {
       host,
       "aria-describedby",
     );
+    tracked.describedByFromAttr = true;
+  } else if (tracked.describedByFromAttr) {
+    target.ariaDescribedByElements = [];
+    tracked.describedByFromAttr = false;
   }
 }
