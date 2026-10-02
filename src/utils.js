@@ -54,73 +54,6 @@ export class CustomElement extends HTMLElement {
     }
   }
 
-  disconnectedCallback() {}
-
-  click() {
-    if (this.constructor.referenceTarget && this.shadowRoot) {
-      const target = this.shadowRoot.getElementById(
-        this.constructor.referenceTarget,
-      );
-      if (target && typeof target.click === "function") {
-        target.click();
-        return;
-      }
-    }
-    super.click();
-  }
-
-  // Forward element-reflecting AOM properties (ariaLabelledByElements, ariaDescribedByElements)
-  // to the internal referenceTarget element when defined.
-  // Native referenceTarget currently only proxies IDREF attributes (like 'for' or 'aria-labelledby'),
-  // not in-memory element reference properties. This proxy bridges the gap without requiring
-  // synthetic ID generation or Light DOM attribute mutations.
-  // Note: Can conflict if the browser engine standardizes this natively in the future.
-  get ariaLabelledByElements() {
-    if (this.constructor.referenceTarget && this.shadowRoot) {
-      const target = this.shadowRoot.getElementById(
-        this.constructor.referenceTarget,
-      );
-      if (target) return target.ariaLabelledByElements ?? null;
-    }
-    return super.ariaLabelledByElements ?? null;
-  }
-
-  set ariaLabelledByElements(elements) {
-    if (this.constructor.referenceTarget && this.shadowRoot) {
-      const target = this.shadowRoot.getElementById(
-        this.constructor.referenceTarget,
-      );
-      if (target) {
-        target.ariaLabelledByElements = elements;
-        return;
-      }
-    }
-    super.ariaLabelledByElements = elements;
-  }
-
-  get ariaDescribedByElements() {
-    if (this.constructor.referenceTarget && this.shadowRoot) {
-      const target = this.shadowRoot.getElementById(
-        this.constructor.referenceTarget,
-      );
-      if (target) return target.ariaDescribedByElements ?? null;
-    }
-    return super.ariaDescribedByElements ?? null;
-  }
-
-  set ariaDescribedByElements(elements) {
-    if (this.constructor.referenceTarget && this.shadowRoot) {
-      const target = this.shadowRoot.getElementById(
-        this.constructor.referenceTarget,
-      );
-      if (target) {
-        target.ariaDescribedByElements = elements;
-        return;
-      }
-    }
-    super.ariaDescribedByElements = elements;
-  }
-
   #setupStateAndProperties() {
     const metaAttrs = this.constructor.meta?.attributes;
     if (!metaAttrs) return;
@@ -235,38 +168,21 @@ function findElementsReferencedByAttribute(host, attrName) {
   return elements;
 }
 
-const syncedFromHost = new WeakMap();
-
 export function syncOutwardAccessibility(host, target) {
   if (!host || !target) return;
 
-  let tracked = syncedFromHost.get(target);
-  if (!tracked) {
-    tracked = { labelledByFromAttr: false, describedByFromAttr: false };
-    syncedFromHost.set(target, tracked);
-  }
-
   // 1. Sync aria-labelledby elements
-  if (host.hasAttribute("aria-labelledby")) {
-    target.ariaLabelledByElements = findElementsReferencedByAttribute(
-      host,
-      "aria-labelledby",
-    );
-    tracked.labelledByFromAttr = true;
-  } else if (tracked.labelledByFromAttr) {
-    target.ariaLabelledByElements = [];
-    tracked.labelledByFromAttr = false;
+  const labelElements = findElementsReferencedByAttribute(
+    host,
+    "aria-labelledby",
+  );
+  if (labelElements.length > 0) {
+    target.ariaLabelledByElements = labelElements;
   }
 
   // 2. Sync aria-describedby elements
-  if (host.hasAttribute("aria-describedby")) {
-    target.ariaDescribedByElements = findElementsReferencedByAttribute(
-      host,
-      "aria-describedby",
-    );
-    tracked.describedByFromAttr = true;
-  } else if (tracked.describedByFromAttr) {
-    target.ariaDescribedByElements = [];
-    tracked.describedByFromAttr = false;
-  }
+  target.ariaDescribedByElements = findElementsReferencedByAttribute(
+    host,
+    "aria-describedby",
+  );
 }

@@ -10,19 +10,30 @@
 <div class="field-preview-container">
   <!-- Vertical text input field -->
   <ds-field>
-    <span slot="label">Email Address</span>
+    <label slot="label" for="preview-email">Email Address</label>
     <ds-input
+      id="preview-email"
       name="email"
       type="email"
       placeholder="name@example.com"
+      aria-describedby="preview-email-helper"
     ></ds-input>
-    <span slot="helper">We will never share your email address.</span>
+    <span slot="helper" id="preview-email-helper"
+      >We will never share your email address.</span
+    >
   </ds-field>
 
   <!-- Horizontal toggle field -->
   <ds-field layout="horizontal">
-    <span slot="label">Enable Notifications</span>
-    <ds-switch name="notifications" checked></ds-switch>
-    <span slot="helper">Receive real-time alerts about updates.</span>
+    <label slot="label" for="preview-notifications">Enable Notifications</label>
+    <ds-switch
+      id="preview-notifications"
+      name="notifications"
+      checked
+      aria-describedby="preview-notifications-helper"
+    ></ds-switch>
+    <span slot="helper" id="preview-notifications-helper"
+      >Receive real-time alerts about updates.</span
+    >
   </ds-field>
 </div>

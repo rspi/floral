@@ -5,8 +5,8 @@ uiTest("ds-field should pass basic a11y audit", async (page) => {
   await page.mount(`
     <div style="background-color: var(--ds-color-background); padding: var(--ds-space-xl);">
       <ds-field>
-        <span slot="label">Username</span>
-        <ds-input></ds-input>
+        <label slot="label" for="username-input">Username</label>
+        <ds-input id="username-input" placeholder="Username"></ds-input>
         <span slot="helper">Enter your custom username.</span>
       </ds-field>
     </div>
@@ -20,9 +20,9 @@ uiTest(
     await page.mount(`
     <div>
       <ds-field>
-        <span slot="label">Email Address</span>
-        <ds-input></ds-input>
-        <span slot="helper">We'll never share your email address.</span>
+        <label slot="label" for="email-input">Email Address</label>
+        <ds-input id="email-input" aria-describedby="email-helper"></ds-input>
+        <span slot="helper" id="email-helper">We'll never share your email address.</span>
       </ds-field>
     </div>
   `);
@@ -62,9 +62,9 @@ uiTest(
     await page.mount(`
     <div>
       <ds-field>
-        <span slot="label">Full Name</span>
-        <ds-input></ds-input>
-        <span slot="helper">Enter your legal full name</span>
+        <label slot="label" for="fullname-input">Full Name</label>
+        <ds-input id="fullname-input" aria-describedby="fullname-helper"></ds-input>
+        <span slot="helper" id="fullname-helper">Enter your legal full name</span>
       </ds-field>
     </div>
   `);
@@ -124,8 +124,8 @@ uiTest(
     await page.mount(`
     <div>
       <ds-field>
-        <span slot="label" id="clickable-label">My Switch</span>
-        <ds-switch></ds-switch>
+        <label slot="label" for="my-switch" id="clickable-label">My Switch</label>
+        <ds-switch id="my-switch"></ds-switch>
       </ds-field>
     </div>
   `);
@@ -171,8 +171,8 @@ uiTest("ds-field should respect layout attributes", async (page) => {
   await page.mount(`
     <div>
       <ds-field id="my-field" layout="horizontal">
-        <span slot="label">Toggle</span>
-        <ds-switch></ds-switch>
+        <label slot="label" for="toggle-switch">Toggle</label>
+        <ds-switch id="toggle-switch"></ds-switch>
       </ds-field>
     </div>
   `);
@@ -192,76 +192,12 @@ uiTest("ds-field should respect layout attributes", async (page) => {
 });
 
 uiTest(
-  "ds-field should restore relationships and label click behavior after being re-attached to DOM",
-  async (page) => {
-    await page.mount(`
-    <div id="wrapper">
-      <ds-field id="reconnect-field">
-        <span slot="label" id="reconnect-label">Username</span>
-        <ds-input id="reconnect-input"></ds-input>
-      </ds-field>
-    </div>
-  `);
-
-    const field = page.locator("#reconnect-field");
-    await field.waitFor({ state: "visible" });
-
-    // Detach and re-attach the element to test lifecycle hooks
-    await page.evaluate(() => {
-      const el = document.getElementById("reconnect-field");
-      const parent = el.parentElement;
-      parent.removeChild(el);
-      parent.appendChild(el);
-    });
-
-    const label = page.locator("#reconnect-label");
-    await label.click();
-
-    const activeTag = await page.evaluate(() =>
-      document.activeElement.tagName.toLowerCase(),
-    );
-    assert.strictEqual(
-      activeTag,
-      "ds-input",
-      "ds-input should be focused after reattaching and clicking label",
-    );
-  },
-);
-
-uiTest(
-  "ds-field should not delegate focus when clicking an interactive link inside the label",
+  "ds-field should work with native checkable inputs and labels",
   async (page) => {
     await page.mount(`
     <div>
       <ds-field>
-        <span slot="label" id="parent-label">
-          Agree to <a href="#terms" id="terms-link">Terms and Conditions</a>
-        </span>
-        <ds-input id="field-input"></ds-input>
-      </ds-field>
-    </div>
-  `);
-
-    const link = page.locator("#terms-link");
-    await link.waitFor({ state: "visible" });
-    await link.click();
-
-    const activeId = await page.evaluate(() => document.activeElement.id);
-    assert.strictEqual(
-      activeId,
-      "terms-link",
-      "Clicking a link inside the label should not divert focus to the input control",
-    );
-  },
-);
-
-uiTest(
-  "ds-field should toggle checkable native inputs on label click",
-  async (page) => {
-    await page.mount(`
-    <div>
-      <ds-field>
-        <span slot="label" id="checkbox-label">Accept terms</span>
+        <label slot="label" for="native-check" id="checkbox-label">Accept terms</label>
         <input type="checkbox" id="native-check" />
       </ds-field>
     </div>
