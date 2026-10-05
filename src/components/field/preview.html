@@ -1,39 +1,5 @@
-<style>
-  .field-preview-container {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    padding: var(--ds-space-xl);
-  }
-</style>
-
-<div class="field-preview-container">
-  <!-- Vertical text input field -->
-  <ds-field>
-    <label slot="label" for="preview-email">Email Address</label>
-    <ds-input
-      id="preview-email"
-      name="email"
-      type="email"
-      placeholder="name@example.com"
-      aria-describedby="preview-email-helper"
-    ></ds-input>
-    <span slot="helper" id="preview-email-helper"
-      >We will never share your email address.</span
-    >
-  </ds-field>
-
-  <!-- Horizontal toggle field -->
-  <ds-field layout="horizontal">
-    <label slot="label" for="preview-notifications">Enable Notifications</label>
-    <ds-switch
-      id="preview-notifications"
-      name="notifications"
-      checked
-      aria-describedby="preview-notifications-helper"
-    ></ds-switch>
-    <span slot="helper" id="preview-notifications-helper"
-      >Receive real-time alerts about updates.</span
-    >
-  </ds-field>
-</div>
+<ds-field>
+  <label slot="label" for="email">Email</label>
+  <ds-input id="email" aria-describedby="email-helper"></ds-input>
+  <span slot="helper" id="email-helper">We will never share your email.</span>
+</ds-field>

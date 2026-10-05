@@ -49,9 +49,3 @@
   column-gap: var(--ds-space-l);
   row-gap: var(--ds-space-xs);
 }
-
-:host(:state(layout-horizontal)) .control-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
