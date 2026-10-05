@@ -31,7 +31,10 @@ window.customElements.define(
         helper: "The helper or description text.",
       },
       parts: {},
-      cssVariables: {},
+      cssVariables: {
+        "--ds-field-columns":
+          "Grid column track definition in horizontal layout. Can be used for subgrid layouts",
+      },
     };
   },
 );

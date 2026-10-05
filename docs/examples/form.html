@@ -5,47 +5,35 @@
     line-height: 1.6;
   }
 
-  .example-form {
+  /* Form Container Utility */
+  .form-card {
     background: var(--ds-color-surface-1);
     padding: var(--ds-space-xl);
     border: 1px solid var(--ds-color-surface-3);
     border-radius: 8px;
-    max-width: 480px;
+    max-width: 520px;
+
+    ds-button {
+      grid-column: 1 / -1;
+      width: fit-content;
+    }
+  }
+
+  /* Form Layout Utilities */
+  .form-stack {
     display: flex;
     flex-direction: column;
     gap: var(--ds-space-xl);
+  }
 
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: var(--ds-space-xs);
-      font-size: 14px;
-    }
+  .form-grid-aligned {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    row-gap: var(--ds-space-l);
 
-    .toggle-section {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--ds-space-l);
-      background: var(--ds-color-surface-2);
-      padding: var(--ds-space-m);
-      border-radius: 6px;
-
-      label {
-        margin-bottom: 0;
-      }
-
-      .description {
-        color: var(--ds-color-text-dark);
-        font-size: 12px;
-        display: block;
-        margin-top: 2px;
-      }
-    }
-
-    ds-button {
-      width: 100%;
-      margin-top: var(--ds-space-m);
+    & > ds-field {
+      display: contents;
+      --ds-field-columns: subgrid;
     }
   }
 </style>
@@ -68,10 +56,10 @@
           JSON.stringify(data, null, 2),
       );
     "
-    class="example-form"
+    class="form-card form-stack"
   >
-    <div>
-      <label for="form-name">Full Name</label>
+    <ds-field>
+      <label slot="label" for="form-name">Full Name</label>
       <ds-input
         id="form-name"
         name="name"
@@ -79,10 +67,10 @@
         placeholder="Enter your full name"
         autofocus
       ></ds-input>
-    </div>
+    </ds-field>
 
-    <div>
-      <label for="form-email">Email Address</label>
+    <ds-field>
+      <label slot="label" for="form-email">Email Address</label>
       <ds-input
         id="form-email"
         type="email"
@@ -90,30 +78,25 @@
         required
         placeholder="name@example.com"
       ></ds-input>
-    </div>
+    </ds-field>
 
-    <div class="toggle-section">
-      <div>
-        <label for="form-marketing">Subscribe to newsletter</label>
-        <span id="marketing-desc" class="description"
-          >Get the latest updates on Floral developments.</span
-        >
-      </div>
+    <ds-field layout="horizontal">
+      <label slot="label" for="form-marketing">Subscribe to newsletter</label>
       <ds-switch
         id="form-marketing"
         name="marketing"
         value="subscribed"
         aria-describedby="marketing-desc"
       ></ds-switch>
-    </div>
+      <span slot="helper" id="marketing-desc"
+        >Get the latest updates on Floral developments.</span
+      >
+    </ds-field>
 
-    <div class="toggle-section">
-      <div>
-        <label for="form-terms">I agree to the Terms of Service</label>
-        <span id="terms-desc" class="description"
-          >You must accept the terms to proceed.</span
-        >
-      </div>
+    <ds-field layout="horizontal">
+      <label slot="label" for="form-terms"
+        >I agree to the Terms of Service</label
+      >
       <ds-switch
         id="form-terms"
         name="terms"
@@ -121,10 +104,60 @@
         value="accepted"
         aria-describedby="terms-desc"
       ></ds-switch>
-    </div>
+      <span slot="helper" id="terms-desc"
+        >You must accept the terms to proceed.</span
+      >
+    </ds-field>
 
-    <div>
-      <ds-button type="submit">Register Account</ds-button>
-    </div>
+    <ds-button type="submit">Register Account</ds-button>
+  </form>
+</section>
+
+<section style="margin-top: var(--ds-space-xxl)">
+  <h2>Aligned Horizontal Form (CSS Subgrid)</h2>
+  <p class="example-description">
+    Demonstrates coordinating multiple horizontal
+    <code>&lt;ds-field&gt;</code> elements using CSS Subgrid. The parent grid
+    specifies <code>grid-template-columns: max-content 1fr</code>, and each
+    child field adopts the tracks via <code>subgrid</code>. Controls align
+    intrinsically without hardcoded widths.
+  </p>
+
+  <form
+    onsubmit="
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(this).entries());
+      alert(
+        'Settings Saved!\n\nCaptured Data:\n' + JSON.stringify(data, null, 2),
+      );
+    "
+    class="form-card form-grid-aligned"
+  >
+    <ds-field layout="horizontal">
+      <label slot="label" for="profile-name">Full Name</label>
+      <ds-input
+        id="profile-name"
+        name="name"
+        placeholder="Ada Lovelace"
+      ></ds-input>
+    </ds-field>
+
+    <ds-field layout="horizontal">
+      <label slot="label" for="profile-org">Organization Name</label>
+      <ds-input
+        id="profile-org"
+        name="organization"
+        placeholder="Analytical Engine Co."
+        aria-describedby="org-helper"
+      ></ds-input>
+      <span slot="helper" id="org-helper">Official registered entity name</span>
+    </ds-field>
+
+    <ds-field layout="horizontal">
+      <label slot="label" for="profile-deploy">Automatic Deployment</label>
+      <ds-switch id="profile-deploy" name="auto_deploy" checked></ds-switch>
+    </ds-field>
+
+    <ds-button type="submit">Save Settings</ds-button>
   </form>
 </section>

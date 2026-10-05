@@ -220,3 +220,48 @@ uiTest(
     );
   },
 );
+
+uiTest(
+  "ds-field should support subgrid alignment across multiple horizontal fields",
+  async (page) => {
+    await page.mount(`
+    <style>
+      .subgrid-form {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        width: 500px;
+      }
+      .subgrid-form ds-field {
+        display: contents;
+        --ds-field-columns: subgrid;
+      }
+    </style>
+    <div class="subgrid-form">
+      <ds-field layout="horizontal">
+        <label slot="label" for="short-label-input">Short</label>
+        <ds-input id="short-label-input"></ds-input>
+      </ds-field>
+      <ds-field layout="horizontal">
+        <label slot="label" for="long-label-input">Very Long Organization Name Label</label>
+        <ds-input id="long-label-input"></ds-input>
+      </ds-field>
+    </div>
+  `);
+
+    const input1 = page.locator("#short-label-input");
+    const input2 = page.locator("#long-label-input");
+
+    await input1.waitFor({ state: "visible" });
+    await input2.waitFor({ state: "visible" });
+
+    const box1 = await input1.boundingBox();
+    const box2 = await input2.boundingBox();
+
+    assert.ok(box1 && box2, "Both bounding boxes should be available");
+    assert.strictEqual(
+      Math.round(box1.x),
+      Math.round(box2.x),
+      "Controls across horizontal subgrid fields should align to the exact same X coordinate",
+    );
+  },
+);

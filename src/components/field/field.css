@@ -44,7 +44,8 @@
   grid-template-areas:
     "label control"
     "helper control";
-  grid-template-columns: 1fr auto;
+  grid-template-columns: var(--ds-field-columns, 1fr auto);
+  grid-column: 1 / -1;
   align-items: center;
   column-gap: var(--ds-space-l);
   row-gap: var(--ds-space-xs);

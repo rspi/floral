@@ -111,6 +111,38 @@ function getActiveAttributes(element) {
   }, {});
 }
 
+function renderCssVariablesTable(cssVariables) {
+  if (!cssVariables || Object.keys(cssVariables).length === 0) return "";
+
+  const rows = Object.entries(cssVariables)
+    .map(
+      ([name, desc]) => `
+      <tr>
+        <td><code>${name}</code></td>
+        <td>${desc}</td>
+      </tr>
+    `,
+    )
+    .join("");
+
+  return `
+    <div class="metadata-section">
+      <h3>CSS Variables</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function renderMetadata(meta, componentNode) {
   if (!meta) return "";
 
@@ -121,6 +153,7 @@ function renderMetadata(meta, componentNode) {
       <h2>Metadata</h2>
       ${renderAttributesTable(meta.attributes, activeAttrs)}
       ${renderSlotsTable(meta.slots)}
+      ${renderCssVariablesTable(meta.cssVariables)}
     </section>
   `;
 }
