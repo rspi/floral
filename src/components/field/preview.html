@@ -1,5 +1,11 @@
 <ds-field>
-  <label slot="label" for="email">Email</label>
-  <ds-input id="email" aria-describedby="email-helper"></ds-input>
-  <span slot="helper" id="email-helper">We will never share your email.</span>
+  <label slot="label" for="username">Username</label>
+  <ds-input
+    id="username"
+    aria-invalid="true"
+    aria-errormessage="username-error"
+    aria-describedby="username-error username-helper"
+  ></ds-input>
+  <span slot="error" id="username-error">Username is already taken.</span>
+  <span slot="helper" id="username-helper">Choose a unique username.</span>
 </ds-field>

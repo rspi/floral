@@ -185,4 +185,10 @@ export function syncOutwardAccessibility(host, target) {
     host,
     "aria-describedby",
   );
+
+  // 3. Sync aria-errormessage elements
+  target.ariaErrorMessageElements = findElementsReferencedByAttribute(
+    host,
+    "aria-errormessage",
+  );
 }

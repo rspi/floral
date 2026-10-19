@@ -545,3 +545,43 @@ uiTest(
     );
   },
 );
+
+uiTest(
+  "ds-input should synchronize aria-errormessage and aria-invalid to inner input element across shadow DOM",
+  async (page) => {
+    await page.mount(`
+      <div>
+        <ds-input id="error-input" aria-label="Account" aria-invalid="true" aria-errormessage="acc-error"></ds-input>
+        <span id="acc-error">Account name is already registered</span>
+      </div>
+    `);
+
+    const host = page.locator("#error-input");
+    await host.focus();
+
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    const textboxNode = nodes.find(
+      (n) => n.role?.value === "textbox" && !n.ignored,
+    );
+    assert.ok(textboxNode, "Textbox node not found in browser AXTree");
+
+    const invalidProp = textboxNode.properties?.find(
+      (p) => p.name === "invalid",
+    );
+    assert.strictEqual(
+      invalidProp?.value?.value,
+      "true",
+      "Textbox should be marked invalid in AXTree",
+    );
+
+    const errorMsgProp = textboxNode.properties?.find(
+      (p) => p.name === "errormessage",
+    );
+    assert.ok(
+      errorMsgProp,
+      "Textbox should have errormessage relationship in AXTree",
+    );
+  },
+);

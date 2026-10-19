@@ -21,6 +21,7 @@ window.customElements.define(
         "aria-label": [],
         "aria-labelledby": [],
         "aria-describedby": [],
+        "aria-errormessage": [],
       },
       slots: {},
       parts: {},
@@ -45,7 +46,11 @@ window.customElements.define(
         } else {
           this.#input.removeAttribute("aria-label");
         }
-      } else if (name === "aria-labelledby" || name === "aria-describedby") {
+      } else if (
+        name === "aria-labelledby" ||
+        name === "aria-describedby" ||
+        name === "aria-errormessage"
+      ) {
         syncOutwardAccessibility(this, this.#input);
       }
     }

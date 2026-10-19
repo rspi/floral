@@ -265,3 +265,323 @@ uiTest(
     );
   },
 );
+
+uiTest(
+  "ds-field should pass accessibility audit with slotted error message",
+  async (page) => {
+    await page.mount(`
+    <div style="background-color: var(--ds-color-background); padding: var(--ds-space-xl);">
+      <ds-field id="error-field">
+        <label slot="label" for="username-error-input">Username</label>
+        <ds-input id="username-error-input" aria-label="Username" aria-errormessage="user-err" aria-describedby="user-err" aria-invalid="true"></ds-input>
+        <span slot="error" id="user-err">Username is already taken.</span>
+        <span slot="helper">Enter your custom username.</span>
+      </ds-field>
+    </div>
+  `);
+    await page.checkA11y();
+  },
+);
+
+uiTest(
+  "ds-field should reflect has-error custom state and display error when slot='error' is provided",
+  async (page) => {
+    await page.mount(`
+      <div>
+        <ds-field id="test-field">
+          <label slot="label" for="test-input">Email</label>
+          <ds-input id="test-input"></ds-input>
+          <span slot="error">Invalid email address</span>
+        </ds-field>
+      </div>
+    `);
+
+    const field = page.locator("#test-field");
+    await field.waitFor({ state: "visible" });
+
+    const hasError = await page.evaluate(() => {
+      return document.getElementById("test-field").matches(":state(has-error)");
+    });
+    assert.strictEqual(
+      hasError,
+      true,
+      "ds-field should have :state(has-error) when error is slotted",
+    );
+
+    const errorText = page.getByText("Invalid email address");
+    await errorText.waitFor({ state: "visible" });
+    assert.ok(
+      await errorText.isVisible(),
+      "Slotted error message should be visible",
+    );
+  },
+);
+
+uiTest(
+  "ds-field should dynamically update has-error state when error slot is added or removed",
+  async (page) => {
+    await page.mount(`
+      <div>
+        <ds-field id="dynamic-field">
+          <label slot="label" for="dynamic-input">Username</label>
+          <ds-input id="dynamic-input"></ds-input>
+          <span slot="helper" id="dynamic-help">Enter a username</span>
+        </ds-field>
+      </div>
+    `);
+
+    const field = page.locator("#dynamic-field");
+    await field.waitFor({ state: "visible" });
+
+    // Initially no error
+    const initiallyHasError = await page.evaluate(() => {
+      return document
+        .getElementById("dynamic-field")
+        .matches(":state(has-error)");
+    });
+    assert.strictEqual(
+      initiallyHasError,
+      false,
+      "ds-field should NOT have :state(has-error) initially",
+    );
+
+    // Add error dynamically
+    await page.evaluate(() => {
+      const err = document.createElement("span");
+      err.slot = "error";
+      err.id = "dynamic-err";
+      err.textContent = "Username is taken";
+      document.getElementById("dynamic-field").appendChild(err);
+    });
+
+    const errorLocator = page.locator("#dynamic-err");
+    await errorLocator.waitFor({ state: "visible" });
+
+    const hasErrorAfterAdd = await page.evaluate(() => {
+      return document
+        .getElementById("dynamic-field")
+        .matches(":state(has-error)");
+    });
+    assert.strictEqual(
+      hasErrorAfterAdd,
+      true,
+      "ds-field should have :state(has-error) after adding error slot",
+    );
+
+    // Remove error dynamically
+    await page.evaluate(() => {
+      document.getElementById("dynamic-err").remove();
+    });
+
+    await errorLocator.waitFor({ state: "detached" });
+
+    const hasErrorAfterRemove = await page.evaluate(() => {
+      return document
+        .getElementById("dynamic-field")
+        .matches(":state(has-error)");
+    });
+    assert.strictEqual(
+      hasErrorAfterRemove,
+      false,
+      "ds-field should remove :state(has-error) when error slot is removed",
+    );
+  },
+);
+
+uiTest(
+  "ds-field should maintain correct reading order (Label -> Control -> Error -> Helper) in AXTree",
+  async (page) => {
+    await page.mount(`
+      <div>
+        <ds-field>
+          <label slot="label" for="ordered-input">Account Name</label>
+          <ds-input id="ordered-input" aria-describedby="ordered-helper"></ds-input>
+          <span slot="error" id="ordered-error">Name already in use</span>
+          <span slot="helper" id="ordered-helper">Must be unique across the organization</span>
+        </ds-field>
+      </div>
+    `);
+
+    const host = page.locator("ds-field");
+    await host.waitFor({ state: "visible" });
+
+    await page.locator("ds-input").focus();
+
+    const client = await page.context().newCDPSession(page);
+    const { nodes } = await client.send("Accessibility.getFullAXTree");
+
+    const nodeMap = new Map(nodes.map((n) => [n.nodeId, n]));
+    const root = nodes.find((n) => !n.parentId);
+    const ordered = [];
+    function traverse(node) {
+      ordered.push(node);
+      for (const childId of node.childIds || []) {
+        const child = nodeMap.get(childId);
+        if (child) traverse(child);
+      }
+    }
+    if (root) traverse(root);
+
+    const labelIndex = ordered.findIndex(
+      (n) => n.name?.value === "Account Name" && !n.ignored,
+    );
+    const controlIndex = ordered.findIndex(
+      (n) => n.role?.value === "textbox" && !n.ignored,
+    );
+    const errorIndex = ordered.findIndex(
+      (n) => n.name?.value === "Name already in use" && !n.ignored,
+    );
+    const helperIndex = ordered.findIndex(
+      (n) =>
+        n.name?.value === "Must be unique across the organization" &&
+        !n.ignored,
+    );
+
+    assert.ok(labelIndex !== -1, "Label not found in AXTree");
+    assert.ok(controlIndex !== -1, "Control not found in AXTree");
+    assert.ok(errorIndex !== -1, "Error not found in AXTree");
+    assert.ok(helperIndex !== -1, "Helper text not found in AXTree");
+
+    assert.ok(
+      labelIndex < controlIndex,
+      "Label should precede Control in AXTree reading order",
+    );
+    assert.ok(
+      controlIndex < errorIndex,
+      "Control should precede Error in AXTree reading order",
+    );
+    assert.ok(
+      errorIndex < helperIndex,
+      "Error should precede Helper in AXTree reading order",
+    );
+  },
+);
+
+uiTest(
+  "ds-field should collapse error row when slot='error' is omitted",
+  async (page) => {
+    await page.mount(`
+      <div>
+        <ds-field id="gap-field">
+          <label slot="label" for="gap-input">Label</label>
+          <ds-input id="gap-input"></ds-input>
+          <span slot="helper" id="gap-helper">Helper text</span>
+        </ds-field>
+      </div>
+    `);
+
+    const input = page.locator("#gap-input");
+    const helper = page.locator("#gap-helper");
+
+    await input.waitFor({ state: "visible" });
+    await helper.waitFor({ state: "visible" });
+
+    const inputBox1 = await input.boundingBox();
+    const helperBox1 = await helper.boundingBox();
+    const baselineDistance = helperBox1.y - (inputBox1.y + inputBox1.height);
+
+    // Dynamically add error
+    await page.evaluate(() => {
+      const err = document.createElement("span");
+      err.slot = "error";
+      err.id = "temp-err";
+      err.textContent = "Error message";
+      document.getElementById("gap-field").appendChild(err);
+    });
+
+    await page.locator("#temp-err").waitFor({ state: "visible" });
+
+    const inputBox2 = await input.boundingBox();
+    const helperBox2 = await helper.boundingBox();
+    const withErrorDistance = helperBox2.y - (inputBox2.y + inputBox2.height);
+
+    assert.ok(
+      withErrorDistance > baselineDistance,
+      "Distance between control and helper should increase when error is present",
+    );
+
+    // Dynamically remove error
+    await page.evaluate(() => {
+      document.getElementById("temp-err").remove();
+    });
+
+    await page.locator("#temp-err").waitFor({ state: "detached" });
+
+    const inputBox3 = await input.boundingBox();
+    const helperBox3 = await helper.boundingBox();
+    const restoredDistance = helperBox3.y - (inputBox3.y + inputBox3.height);
+
+    assert.strictEqual(
+      Math.round(restoredDistance),
+      Math.round(baselineDistance),
+      "Distance between control and helper should return to baseline when error is removed",
+    );
+  },
+);
+
+uiTest(
+  "ds-field should support horizontal layout with slotted error positioned under the controller",
+  async (page) => {
+    await page.mount(`
+      <div>
+        <ds-field id="horiz-error-field" layout="horizontal">
+          <label slot="label" for="horiz-switch">Notifications</label>
+          <ds-switch id="horiz-switch"></ds-switch>
+          <span slot="error" id="horiz-err">Failed to update notification preference</span>
+          <span slot="helper" id="horiz-help">Receive email notifications</span>
+        </ds-field>
+      </div>
+    `);
+
+    const field = page.locator("#horiz-error-field");
+    await field.waitFor({ state: "visible" });
+
+    const hasHorizontalState = await page.evaluate(() => {
+      return document
+        .getElementById("horiz-error-field")
+        .matches(":state(layout-horizontal)");
+    });
+    const hasErrorState = await page.evaluate(() => {
+      return document
+        .getElementById("horiz-error-field")
+        .matches(":state(has-error)");
+    });
+
+    assert.ok(hasHorizontalState, "Should match :state(layout-horizontal)");
+    assert.ok(hasErrorState, "Should match :state(has-error)");
+
+    const errorMsg = page.locator("#horiz-err");
+    const sw = page.locator("#horiz-switch");
+    const label = page.locator("label");
+
+    await errorMsg.waitFor({ state: "visible" });
+    await sw.waitFor({ state: "visible" });
+    await label.waitFor({ state: "visible" });
+
+    const swBox = await sw.boundingBox();
+    const errorBox = await errorMsg.boundingBox();
+    const labelBox = await label.boundingBox();
+
+    assert.ok(
+      swBox && errorBox && labelBox,
+      "Bounding boxes should be defined",
+    );
+
+    // Verify error is vertically below the control
+    assert.ok(
+      errorBox.y >= swBox.y + swBox.height,
+      `Error (y: ${errorBox.y}) should be below control (bottom: ${swBox.y + swBox.height})`,
+    );
+
+    // Verify error is in the control column (aligned to the right of label)
+    assert.ok(
+      errorBox.x > labelBox.x,
+      `Error (x: ${errorBox.x}) should be to the right of label (x: ${labelBox.x})`,
+    );
+    assert.strictEqual(
+      Math.round(errorBox.x),
+      Math.round(swBox.x),
+      "Error should align with the control column start",
+    );
+  },
+);

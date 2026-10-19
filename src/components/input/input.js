@@ -26,6 +26,8 @@ window.customElements.define(
         "aria-label": [],
         "aria-labelledby": [],
         "aria-describedby": [],
+        "aria-errormessage": [],
+        "aria-invalid": ["true", "false", "grammar", "spelling"],
       },
       slots: {},
       parts: {},
@@ -43,10 +45,12 @@ window.customElements.define(
         this.#input.validationMessage,
         this.#input,
       );
-      if (isValid) {
+
+      const ariaInvalid = this["aria-invalid"];
+      if (ariaInvalid === "false" || (!ariaInvalid && isValid)) {
         this.#input.removeAttribute("aria-invalid");
       } else {
-        this.#input.setAttribute("aria-invalid", "true");
+        this.#input.setAttribute("aria-invalid", ariaInvalid || "true");
       }
     }
 
@@ -103,8 +107,14 @@ window.customElements.define(
         } else {
           this.#input.removeAttribute("aria-label");
         }
-      } else if (name === "aria-labelledby" || name === "aria-describedby") {
+      } else if (
+        name === "aria-labelledby" ||
+        name === "aria-describedby" ||
+        name === "aria-errormessage"
+      ) {
         syncOutwardAccessibility(this, this.#input);
+      } else if (name === "aria-invalid") {
+        this.#updateValidity();
       }
     }
 
