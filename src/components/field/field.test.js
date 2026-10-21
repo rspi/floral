@@ -585,3 +585,279 @@ uiTest(
     );
   },
 );
+
+uiTest(
+  "ds-field should automatically display and clear validation error on submit, typing, and blur",
+  async (page) => {
+    await page.mount(`
+      <form id="test-form">
+        <ds-field id="f-auto">
+          <label slot="label" for="auto-input">Username</label>
+          <ds-input id="auto-input" required></ds-input>
+        </ds-field>
+        <button type="submit" id="auto-sub">Submit</button>
+      </form>
+    `);
+
+    const field = page.locator("#f-auto");
+    const autoError = page.locator("#f-auto .auto-error");
+    const input = page.locator("#auto-input").getByRole("textbox");
+    const submitBtn = page.locator("#auto-sub");
+
+    // Pristine initially
+    let hasError = await page.evaluate(() =>
+      document.getElementById("f-auto").matches(":state(has-error)"),
+    );
+    assert.strictEqual(hasError, false, "Should not have has-error initially");
+
+    // Submit form -> triggers invalid event, captures it, prevents native popup
+    await submitBtn.click();
+    hasError = await page.evaluate(() =>
+      document.getElementById("f-auto").matches(":state(has-error)"),
+    );
+    assert.strictEqual(
+      hasError,
+      true,
+      "Should have has-error after submit attempt",
+    );
+    assert.ok(await autoError.isVisible(), "Auto error should be visible");
+    const msg = await autoError.textContent();
+    assert.ok(msg.length > 0, "Validation message should not be empty");
+
+    // Typing valid text resolves the error
+    await input.fill("john_doe");
+    hasError = await page.evaluate(() =>
+      document.getElementById("f-auto").matches(":state(has-error)"),
+    );
+    assert.strictEqual(hasError, false, "Should remove has-error once valid");
+    assert.strictEqual(
+      await autoError.isVisible(),
+      false,
+      "Auto error should be hidden once valid",
+    );
+
+    // Clearing input and blurring re-triggers error
+    await input.fill("");
+    await submitBtn.focus();
+    hasError = await page.evaluate(() =>
+      document.getElementById("f-auto").matches(":state(has-error)"),
+    );
+    assert.strictEqual(
+      hasError,
+      true,
+      "Should have has-error after blur on empty required field",
+    );
+    assert.ok(
+      await autoError.isVisible(),
+      "Auto error should be visible again",
+    );
+
+    // Form reset clears error
+    await page.evaluate(() => document.getElementById("test-form").reset());
+    hasError = await page.evaluate(() =>
+      document.getElementById("f-auto").matches(":state(has-error)"),
+    );
+    assert.strictEqual(hasError, false, "Should clear has-error on form reset");
+  },
+);
+
+uiTest(
+  "ds-field should prioritize consumer slotted error over automatic validation error",
+  async (page) => {
+    await page.mount(`
+      <form id="override-form">
+        <ds-field id="f-override">
+          <label slot="label" for="override-input">Email</label>
+          <ds-input id="override-input" required></ds-input>
+          <span slot="error" id="custom-override-err">Custom Server Error</span>
+        </ds-field>
+        <button type="submit" id="override-sub">Submit</button>
+      </form>
+    `);
+
+    const customErr = page.locator("#custom-override-err");
+    const autoErr = page.locator("#f-override .auto-error");
+    const submitBtn = page.locator("#override-sub");
+
+    assert.ok(
+      await customErr.isVisible(),
+      "Custom slotted error should be visible",
+    );
+    assert.strictEqual(
+      await autoErr.isVisible(),
+      false,
+      "Auto error should not be visible when custom error is slotted",
+    );
+
+    // Submit form (triggers invalid on control)
+    await submitBtn.click();
+
+    // Custom error should remain visible, auto error must not override
+    assert.ok(
+      await customErr.isVisible(),
+      "Custom slotted error should remain visible after invalid event",
+    );
+    assert.strictEqual(
+      await autoErr.isVisible(),
+      false,
+      "Auto error must not override slotted error",
+    );
+    assert.strictEqual(await customErr.textContent(), "Custom Server Error");
+  },
+);
+
+uiTest(
+  "ds-field should support automatic validation with native form controls",
+  async (page) => {
+    await page.mount(`
+      <form id="native-form">
+        <ds-field id="f-native">
+          <label slot="label" for="native-field-input">Password</label>
+          <input id="native-field-input" type="password" required />
+        </ds-field>
+        <button type="submit" id="native-sub">Submit</button>
+      </form>
+    `);
+
+    const autoError = page.locator("#f-native .auto-error");
+    const submitBtn = page.locator("#native-sub");
+    const input = page.locator("#native-field-input");
+
+    await submitBtn.click();
+    assert.ok(
+      await autoError.isVisible(),
+      "Auto error should show for native input on submit",
+    );
+
+    await input.fill("secret123");
+    assert.strictEqual(
+      await autoError.isVisible(),
+      false,
+      "Auto error should clear when typing valid text into native input",
+    );
+  },
+);
+
+uiTest(
+  "ds-field should update all invalid fields on submit even when one field is focused",
+  async (page) => {
+    await page.mount(`
+      <form id="multi-form">
+        <ds-field id="f-multi-1">
+          <label slot="label" for="in-multi-1">First Name</label>
+          <ds-input id="in-multi-1" required autofocus></ds-input>
+        </ds-field>
+        <ds-field id="f-multi-2">
+          <label slot="label" for="in-multi-2">Last Name</label>
+          <ds-input id="in-multi-2" required></ds-input>
+        </ds-field>
+        <ds-button type="submit" id="multi-sub">Register</ds-button>
+      </form>
+    `);
+
+    const submitBtn = page.locator("#multi-sub");
+    await submitBtn.click();
+
+    const f1HasError = await page.evaluate(() =>
+      document.getElementById("f-multi-1").matches(":state(has-error)"),
+    );
+    const f2HasError = await page.evaluate(() =>
+      document.getElementById("f-multi-2").matches(":state(has-error)"),
+    );
+
+    assert.strictEqual(
+      f1HasError,
+      true,
+      "First field should show error on first submit attempt",
+    );
+    assert.strictEqual(
+      f2HasError,
+      true,
+      "Second field should also show error on first submit attempt",
+    );
+  },
+);
+
+uiTest(
+  "ds-field should focus the first invalid field on form submission",
+  async (page) => {
+    await page.mount(`
+      <form id="focus-form">
+        <ds-field id="f-foc-1">
+          <label slot="label" for="in-foc-1">First</label>
+          <ds-input id="in-foc-1" required></ds-input>
+        </ds-field>
+        <ds-field id="f-foc-2">
+          <label slot="label" for="in-foc-2">Second</label>
+          <ds-input id="in-foc-2" required></ds-input>
+        </ds-field>
+        <ds-button type="submit" id="foc-sub">Submit</ds-button>
+      </form>
+    `);
+
+    // Focus the second input first
+    await page.locator("#in-foc-2").focus();
+
+    // Submit form
+    await page.locator("#foc-sub").click();
+
+    // Focus must move to the FIRST invalid field (in-foc-1)
+    const activeId = await page.evaluate(() => document.activeElement?.id);
+    assert.strictEqual(
+      activeId,
+      "in-foc-1",
+      "Focus should move to the first invalid control on submission failure",
+    );
+  },
+);
+
+uiTest(
+  "ds-field should clear custom error when input.setCustomValidity('') is called programmatically",
+  async (page) => {
+    await page.mount(`
+      <ds-field id="f-prog">
+        <label slot="label" for="in-prog">Username</label>
+        <ds-input id="in-prog"></ds-input>
+      </ds-field>
+    `);
+
+    const autoError = page.locator("#f-prog .auto-error");
+
+    // Invalidate via setCustomValidity and reportValidity
+    await page.evaluate(() => {
+      const input = document.getElementById("in-prog");
+      input.setCustomValidity("Username already taken");
+      input.reportValidity();
+    });
+
+    let hasError = await page.evaluate(() =>
+      document.getElementById("f-prog").matches(":state(has-error)"),
+    );
+    assert.strictEqual(
+      hasError,
+      true,
+      "Field should display error after reportValidity",
+    );
+    assert.ok(await autoError.isVisible(), "Auto error should be visible");
+    assert.strictEqual(await autoError.textContent(), "Username already taken");
+
+    // Clear programmatically without user typing
+    await page.evaluate(() => {
+      document.getElementById("in-prog").setCustomValidity("");
+    });
+
+    hasError = await page.evaluate(() =>
+      document.getElementById("f-prog").matches(":state(has-error)"),
+    );
+    assert.strictEqual(
+      hasError,
+      false,
+      "Field should clear error immediately after setCustomValidity('')",
+    );
+    assert.strictEqual(
+      await autoError.isVisible(),
+      false,
+      "Auto error element should be hidden",
+    );
+  },
+);

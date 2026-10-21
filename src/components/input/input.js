@@ -67,7 +67,23 @@ window.customElements.define(
     }
 
     reportValidity() {
-      return this.internals.reportValidity();
+      const valid = this.internals.reportValidity();
+      if (valid) {
+        this.dispatchEvent(
+          new Event("valid", { bubbles: true, composed: true }),
+        );
+      }
+      return valid;
+    }
+
+    setCustomValidity(message) {
+      this.#input.setCustomValidity(message);
+      this.#updateValidity();
+      if (!message) {
+        this.dispatchEvent(
+          new Event("valid", { bubbles: true, composed: true }),
+        );
+      }
     }
 
     get validity() {

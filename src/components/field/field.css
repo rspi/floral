@@ -50,7 +50,8 @@
   margin: 0;
 }
 
-.error-wrapper ::slotted(*) {
+.error-wrapper ::slotted(*),
+.auto-error {
   font-family: inherit;
   font-size: 12px;
   color: var(--ds-color-rose-70);

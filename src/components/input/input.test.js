@@ -186,6 +186,62 @@ uiTest(
   },
 );
 
+uiTest(
+  "ds-input should support setCustomValidity to programmatically set and clear errors",
+  async (page) => {
+    await page.mount(`<ds-input aria-label="Custom Input"></ds-input>`);
+
+    // Initially valid
+    let status = await page.evaluate(() => {
+      const el = document.querySelector("ds-input");
+      return {
+        isValid: el.checkValidity(),
+        customError: el.validity.customError,
+        message: el.validationMessage,
+      };
+    });
+    assert.strictEqual(status.isValid, true);
+    assert.strictEqual(status.customError, false);
+    assert.strictEqual(status.message, "");
+
+    // Set custom error
+    await page.evaluate(() => {
+      document
+        .querySelector("ds-input")
+        .setCustomValidity("Username already in use");
+    });
+
+    status = await page.evaluate(() => {
+      const el = document.querySelector("ds-input");
+      return {
+        isValid: el.checkValidity(),
+        customError: el.validity.customError,
+        message: el.validationMessage,
+      };
+    });
+    assert.strictEqual(status.isValid, false);
+    assert.strictEqual(status.customError, true);
+    assert.strictEqual(status.message, "Username already in use");
+
+    // Clear custom error
+    await page.evaluate(() => {
+      document.querySelector("ds-input").setCustomValidity("");
+    });
+
+    status = await page.evaluate(() => {
+      const el = document.querySelector("ds-input");
+      return {
+        isValid: el.checkValidity(),
+        customError: el.validity.customError,
+        message: el.validationMessage,
+      };
+    });
+    assert.strictEqual(status.isValid, true);
+    assert.strictEqual(status.customError, false);
+    assert.strictEqual(status.message, "");
+  },
+);
+
 uiTest("ds-input should submit form when pressing Enter", async (page) => {
   await page.mount(`
     <form id="test-form">
