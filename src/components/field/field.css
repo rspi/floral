@@ -68,8 +68,8 @@
 :host(:state(layout-horizontal)) .field-container {
   grid-template-areas:
     "label control"
-    "helper control";
-  grid-template-columns: var(--ds-field-columns, 1fr auto);
+    ". helper";
+  grid-template-columns: var(--ds-field-columns, auto 1fr);
   grid-column: 1 / -1;
   align-items: center;
   column-gap: var(--ds-space-l);
@@ -79,5 +79,6 @@
 :host(:state(layout-horizontal):state(has-error)) .field-container {
   grid-template-areas:
     "label control"
-    "helper error";
+    ". error"
+    ". helper";
 }

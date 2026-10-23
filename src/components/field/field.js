@@ -30,6 +30,30 @@ function isSubmitTarget(el) {
   return type === "submit";
 }
 
+let isSubmitPointerDown = false;
+
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (isSubmitTarget(e.target)) {
+        isSubmitPointerDown = true;
+      }
+    },
+    true,
+  );
+
+  window.addEventListener(
+    "pointerup",
+    () => {
+      setTimeout(() => {
+        isSubmitPointerDown = false;
+      }, 50);
+    },
+    true,
+  );
+}
+
 const html = `
 <div class="field-container">
   <div class="label-wrapper">
@@ -96,9 +120,9 @@ window.customElements.define(
     };
 
     #handleFocusOut = (e) => {
-      // If focus moves to a submit button, skip blur validation so error expansion
-      // does not cause a layout shift that aborts the pending submit click.
-      if (isSubmitTarget(e.relatedTarget)) {
+      // If a pointer is actively pressing a submit button, skip blur validation
+      // so layout expansion does not move the button away from the cursor.
+      if (isSubmitPointerDown) {
         return;
       }
 
@@ -110,6 +134,13 @@ window.customElements.define(
 
     #handleInput = (e) => {
       if (isValuableControl(e.target) && this.#isTouched) {
+        this.#syncValidity(e.target);
+      }
+    };
+
+    #handleChange = (e) => {
+      if (isValuableControl(e.target)) {
+        this.#isTouched = true;
         this.#syncValidity(e.target);
       }
     };
@@ -176,7 +207,7 @@ window.customElements.define(
       this.addEventListener("invalid", this.#handleInvalid, { capture: true });
       this.addEventListener("focusout", this.#handleFocusOut);
       this.addEventListener("input", this.#handleInput);
-      this.addEventListener("change", this.#handleInput);
+      this.addEventListener("change", this.#handleChange);
       this.addEventListener("valid", this.#handleValid);
     }
   },

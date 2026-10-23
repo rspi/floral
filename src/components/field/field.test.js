@@ -573,15 +573,60 @@ uiTest(
       `Error (y: ${errorBox.y}) should be below control (bottom: ${swBox.y + swBox.height})`,
     );
 
-    // Verify error is in the control column (aligned to the right of label)
+    // Verify error and control are in the control column (aligned to the right of label)
     assert.ok(
       errorBox.x > labelBox.x,
       `Error (x: ${errorBox.x}) should be to the right of label (x: ${labelBox.x})`,
     );
+    assert.ok(
+      swBox.x > labelBox.x,
+      `Control (x: ${swBox.x}) should be to the right of label (x: ${labelBox.x})`,
+    );
+
+    // Verify left alignment in the control column
     assert.strictEqual(
       Math.round(errorBox.x),
       Math.round(swBox.x),
-      "Error should align with the control column start",
+      "Control and error should align flush to the left edge of the control column",
+    );
+  },
+);
+
+uiTest(
+  "ds-field horizontal switch should not shift horizontally when error appears or disappears",
+  async (page) => {
+    await page.mount(`
+      <div style="width: 500px; padding: 20px; background: white;">
+        <ds-field layout="horizontal" id="stable-field">
+          <label slot="label" for="stable-sw">Terms of Service</label>
+          <ds-switch id="stable-sw" required></ds-switch>
+        </ds-field>
+      </div>
+    `);
+
+    const sw = page.locator("#stable-sw");
+    const boxBefore = await sw.boundingBox();
+
+    // Trigger error
+    await page.evaluate(() =>
+      document.getElementById("stable-sw").reportValidity(),
+    );
+    const boxWithError = await sw.boundingBox();
+
+    assert.strictEqual(
+      Math.round(boxWithError.x),
+      Math.round(boxBefore.x),
+      "Switch X position should not shift when error is shown",
+    );
+
+    // Toggle switch to valid (clearing error)
+    await sw.click();
+    const boxAfterClear = await sw.boundingBox();
+
+    assert.strictEqual(
+      Math.round(boxAfterClear.x),
+      Math.round(boxBefore.x),
+      "Switch X position should not shift when error is cleared",
     );
   },
 );
@@ -858,6 +903,99 @@ uiTest(
       await autoError.isVisible(),
       false,
       "Auto error element should be hidden",
+    );
+  },
+);
+
+uiTest(
+  "ds-field should show error when tabbing from required switch to submit button",
+  async (page) => {
+    await page.mount(`
+      <form id="tab-form">
+        <ds-field id="f-tab-sw">
+          <label slot="label" for="tab-sw">Terms</label>
+          <ds-switch id="tab-sw" required></ds-switch>
+        </ds-field>
+        <ds-button type="submit" id="tab-btn">Submit</ds-button>
+      </form>
+    `);
+
+    const sw = page.locator("#tab-sw");
+    const field = page.locator("#f-tab-sw");
+    const autoError = page.locator("#f-tab-sw .auto-error");
+
+    await sw.focus();
+    await page.keyboard.press("Tab");
+
+    const hasError = await field.evaluate((el) =>
+      el.matches(":state(has-error)"),
+    );
+    assert.strictEqual(
+      hasError,
+      true,
+      "Switch field should show error when tabbed away to submit button",
+    );
+    assert.ok(
+      await autoError.isVisible(),
+      "Auto error should be visible on blur",
+    );
+  },
+);
+
+uiTest(
+  "ds-field should update error immediately on switch change without requiring blur",
+  async (page) => {
+    await page.mount(`
+      <ds-field id="f-sw-change" layout="horizontal">
+        <label slot="label" for="sw-change">Terms</label>
+        <ds-switch id="sw-change" required></ds-switch>
+      </ds-field>
+    `);
+
+    const sw = page.locator("#sw-change");
+    const field = page.locator("#f-sw-change");
+    const autoError = page.locator("#f-sw-change .auto-error");
+
+    // Initially pristine (unchecked, but not touched yet)
+    let hasError = await field.evaluate((el) =>
+      el.matches(":state(has-error)"),
+    );
+    assert.strictEqual(
+      hasError,
+      false,
+      "Should not show error on initial mount",
+    );
+
+    // Click switch to check it -> valid
+    await sw.click();
+    hasError = await field.evaluate((el) => el.matches(":state(has-error)"));
+    assert.strictEqual(hasError, false, "Should not show error when checked");
+
+    // Click switch again to uncheck it -> immediately invalid without blur!
+    await sw.click();
+    hasError = await field.evaluate((el) => el.matches(":state(has-error)"));
+    assert.strictEqual(
+      hasError,
+      true,
+      "Should show error immediately upon unchecking required switch",
+    );
+    assert.ok(
+      await autoError.isVisible(),
+      "Error message should be visible immediately",
+    );
+
+    // Click switch third time to re-check -> immediately valid!
+    await sw.click();
+    hasError = await field.evaluate((el) => el.matches(":state(has-error)"));
+    assert.strictEqual(
+      hasError,
+      false,
+      "Should clear error immediately upon re-checking switch",
+    );
+    assert.strictEqual(
+      await autoError.isVisible(),
+      false,
+      "Error message should be hidden immediately",
     );
   },
 );

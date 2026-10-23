@@ -80,12 +80,11 @@
       ></ds-input>
     </ds-field>
 
-    <ds-field layout="horizontal">
+    <ds-field>
       <label slot="label" for="form-marketing">Subscribe to newsletter</label>
       <ds-switch
         id="form-marketing"
         name="marketing"
-        value="subscribed"
         aria-describedby="marketing-desc"
       ></ds-switch>
       <span slot="helper" id="marketing-desc"
@@ -93,7 +92,7 @@
       >
     </ds-field>
 
-    <ds-field layout="horizontal">
+    <ds-field>
       <label slot="label" for="form-terms"
         >I agree to the Terms of Service</label
       >
@@ -101,7 +100,6 @@
         id="form-terms"
         name="terms"
         required
-        value="accepted"
         aria-describedby="terms-desc"
       ></ds-switch>
       <span slot="helper" id="terms-desc"
@@ -155,7 +153,12 @@
 
     <ds-field layout="horizontal">
       <label slot="label" for="profile-deploy">Automatic Deployment</label>
-      <ds-switch id="profile-deploy" name="auto_deploy" checked></ds-switch>
+      <ds-switch
+        required
+        id="profile-deploy"
+        name="auto_deploy"
+        checked
+      ></ds-switch>
     </ds-field>
 
     <ds-button type="submit">Save Settings</ds-button>

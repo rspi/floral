@@ -114,6 +114,136 @@ uiTest("ds-switch should be disabled in a disabled fieldset", async (page) => {
 });
 
 uiTest(
+  "ds-switch should block form submission when required and unchecked",
+  async (page) => {
+    await page.mount(`
+      <form id="test-form">
+        <ds-switch name="terms" required aria-label="Terms"></ds-switch>
+        <button type="submit">Submit</button>
+      </form>
+    `);
+
+    let submitted = false;
+    await page.evaluate(() => {
+      document.getElementById("test-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        window.__submitted = true;
+      });
+    });
+
+    await page.getByRole("button", { name: "Submit" }).click();
+    submitted = await page.evaluate(() => Boolean(window.__submitted));
+    assert.strictEqual(
+      submitted,
+      false,
+      "Form should NOT submit when required switch is unchecked",
+    );
+
+    // Check the switch
+    await page.getByRole("switch", { name: "Terms" }).click();
+
+    await page.getByRole("button", { name: "Submit" }).click();
+    submitted = await page.evaluate(() => Boolean(window.__submitted));
+    assert.strictEqual(
+      submitted,
+      true,
+      "Form SHOULD submit when required switch is checked",
+    );
+  },
+);
+
+uiTest(
+  "ds-switch should expose validity and validationMessage",
+  async (page) => {
+    await page.mount(
+      `<ds-switch required aria-label="Required Switch"></ds-switch>`,
+    );
+
+    const { isValid, hasValueMissing, validationMessage } = await page.evaluate(
+      () => {
+        const el = document.querySelector("ds-switch");
+        return {
+          isValid: el.checkValidity(),
+          hasValueMissing: el.validity.valueMissing,
+          validationMessage: el.validationMessage,
+        };
+      },
+    );
+
+    assert.strictEqual(isValid, false);
+    assert.strictEqual(hasValueMissing, true);
+    assert.ok(validationMessage.length > 0);
+
+    // Toggle switch
+    await page.getByRole("switch", { name: "Required Switch" }).click();
+
+    const { isValidAfter, hasValueMissingAfter } = await page.evaluate(() => {
+      const el = document.querySelector("ds-switch");
+      return {
+        isValidAfter: el.checkValidity(),
+        hasValueMissingAfter: el.validity.valueMissing,
+      };
+    });
+
+    assert.strictEqual(isValidAfter, true);
+    assert.strictEqual(hasValueMissingAfter, false);
+  },
+);
+
+uiTest(
+  "ds-switch should support setCustomValidity to programmatically set and clear errors",
+  async (page) => {
+    await page.mount(`<ds-switch aria-label="Custom Switch"></ds-switch>`);
+
+    let status = await page.evaluate(() => {
+      const el = document.querySelector("ds-switch");
+      return {
+        isValid: el.checkValidity(),
+        customError: el.validity.customError,
+        message: el.validationMessage,
+      };
+    });
+    assert.strictEqual(status.isValid, true);
+    assert.strictEqual(status.customError, false);
+    assert.strictEqual(status.message, "");
+
+    await page.evaluate(() => {
+      document
+        .querySelector("ds-switch")
+        .setCustomValidity("You must accept terms");
+    });
+
+    status = await page.evaluate(() => {
+      const el = document.querySelector("ds-switch");
+      return {
+        isValid: el.checkValidity(),
+        customError: el.validity.customError,
+        message: el.validationMessage,
+      };
+    });
+    assert.strictEqual(status.isValid, false);
+    assert.strictEqual(status.customError, true);
+    assert.strictEqual(status.message, "You must accept terms");
+
+    await page.evaluate(() => {
+      document.querySelector("ds-switch").setCustomValidity("");
+    });
+
+    status = await page.evaluate(() => {
+      const el = document.querySelector("ds-switch");
+      return {
+        isValid: el.checkValidity(),
+        customError: el.validity.customError,
+        message: el.validationMessage,
+      };
+    });
+    assert.strictEqual(status.isValid, true);
+    assert.strictEqual(status.customError, false);
+    assert.strictEqual(status.message, "");
+  },
+);
+
+uiTest(
   "ds-switch should expose exactly one switch node in the Accessibility Tree (AXTree) to prevent double-announcement",
   async (page) => {
     await page.mount(`
